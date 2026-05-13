@@ -1,3 +1,5 @@
+mod helpers;
+
 fn main() {
-    println!("Hello, world!");
+    dbg!(helpers::random_double());
 }

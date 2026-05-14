@@ -71,5 +71,5 @@ pub fn random_in_unit_disk() -> DVec3 {
 
 /// Checks if all elements of a vector are nearly zero
 pub fn near_zero(v: DVec3) -> bool {
-    (v.abs().max_element() < ALMOST_ZERO)
+    v.abs().max_element() < ALMOST_ZERO
 }

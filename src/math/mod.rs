@@ -1,9 +1,10 @@
 mod color;
+mod comparison;
 mod interval;
-mod random;
+pub mod random;
 mod ray;
 
-pub use color::*;
-pub use interval::*;
-pub use random::*;
-pub use ray::*;
+pub use color::Color;
+pub use comparison::*;
+pub use interval::DInterval;
+pub use ray::Ray;

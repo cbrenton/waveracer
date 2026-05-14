@@ -1,7 +1,7 @@
 use glam::DVec3;
 
-mod helpers;
-mod math;
+use rt2::helpers;
+use rt2::math;
 
 fn main() {
     dbg!(helpers::random_double());

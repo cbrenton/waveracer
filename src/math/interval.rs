@@ -8,7 +8,7 @@ pub struct Interval<T> {
     pub max: T,
 }
 
-impl<T: Add<Output = T> + Sub<Output = T> + Mul<Output = T> + PartialOrd + Copy> Interval<T> {
+impl<T: Add<Output = T> + Sub<Output = T> + PartialOrd + Copy> Interval<T> {
     pub fn new(min: T, max: T) -> Self {
         Self { min, max }
     }

@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_imports)]
-
 use glam::DVec3;
 
 /// A Color is a DVec3 where each component is a double of range [0.0 -> 1.0]

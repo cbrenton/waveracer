@@ -1,9 +1,6 @@
-#![allow(dead_code, unused_imports)]
-
 use std::ops::{Add, Mul, Sub};
 
 pub type DInterval = Interval<f64>;
-pub type IInterval = Interval<i32>;
 
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 pub struct Interval<T> {
@@ -57,23 +54,6 @@ impl DInterval {
     /// Converts range (0.0..1.0) to (min..max)
     pub fn scale(&self, x: f64) -> f64 {
         x * self.size() + self.min
-    }
-}
-
-impl IInterval {
-    pub const EMPTY: Self = Interval {
-        min: i32::MAX,
-        max: i32::MIN,
-    };
-
-    pub const UNIVERSE: Self = Interval {
-        min: i32::MIN,
-        max: i32::MAX,
-    };
-
-    /// Converts range (0.0..1.0) to (min..max)
-    pub fn scale(&self, x: f64) -> i32 {
-        (x * self.size() as f64) as i32 + self.min
     }
 }
 
@@ -156,23 +136,5 @@ mod tests {
     fn test_dinterval_scale_converts_point_5_to_midpoint() {
         let ival = DInterval::new(-1.0, 1.0);
         assert_eq!(ival.scale(0.5), ival.min + (ival.max - ival.min) / 2.0);
-    }
-
-    #[test]
-    fn test_iinterval_scale_converts_0_to_min() {
-        let ival = IInterval::new(-1, 1);
-        assert_eq!(ival.scale(0.0), ival.min);
-    }
-
-    #[test]
-    fn test_iinterval_scale_converts_1_to_max() {
-        let ival = IInterval::new(-1, 1);
-        assert_eq!(ival.scale(1.0), ival.max);
-    }
-
-    #[test]
-    fn test_iinterval_scale_converts_point_5_to_midpoint() {
-        let ival = IInterval::new(-1, 1);
-        assert_eq!(ival.scale(0.5), ival.min + (ival.max - ival.min) / 2);
     }
 }

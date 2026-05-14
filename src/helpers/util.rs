@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_imports)]
-
 use glam::DVec3;
 use rand::prelude::*;
 use std::ops::Range;

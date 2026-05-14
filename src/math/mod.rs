@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_imports)]
-
 mod color;
 mod interval;
 mod ray;

@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use glam::DVec3;
 
 #[derive(Default, Copy, Clone, Debug, PartialEq)]
@@ -72,7 +70,8 @@ mod tests {
     }
 
     #[test]
-    fn test_direction_inv_for_dir_with_some_zero_components_returns_infinity_for_only_those_components() {
+    fn test_direction_inv_for_dir_with_some_zero_components_returns_infinity_for_only_those_components()
+     {
         let origin = DVec3::ONE;
         let dir = DVec3::new(0.0, -2.0, 2.0);
         let r = Ray::new(origin, dir);

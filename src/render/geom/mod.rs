@@ -1,5 +1,7 @@
 mod hitrecord;
 mod hittable;
+mod triangle;
 
-pub use hitrecord::*;
-pub use hittable::*;
+pub use hitrecord::HitRecord;
+pub use hittable::Hittable;
+pub use triangle::Triangle;

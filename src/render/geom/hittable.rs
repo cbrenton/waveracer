@@ -1,17 +1,26 @@
 use crate::{
-    math::{DInterval, Ray},
-    render::HitRecord,
+    math::{Bounds3, DInterval, Ray},
+    render::{HitRecord, Triangle},
 };
 
 // TODO: add triangle, hittablelist, bvhnode, etc
 pub enum Hittable {
     Dummy,
+    Triangle(Triangle),
 }
 
 impl Hittable {
     pub fn hit(&self, ray: &Ray, ray_t: DInterval) -> Option<HitRecord> {
         match self {
             Hittable::Dummy => None,
+            Hittable::Triangle(tri) => tri.hit(ray, ray_t),
+        }
+    }
+
+    pub fn aabb(&self) -> Bounds3 {
+        match self {
+            Hittable::Dummy => Bounds3::EMPTY,
+            Hittable::Triangle(tri) => tri.aabb(),
         }
     }
 }

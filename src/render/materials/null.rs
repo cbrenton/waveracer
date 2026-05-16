@@ -5,7 +5,7 @@ use crate::{
     render::{HitRecord, Material, ScatterData},
 };
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct NullMaterial {}
 
 impl Material for NullMaterial {

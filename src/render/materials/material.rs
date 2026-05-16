@@ -1,10 +1,10 @@
-use std::sync::Arc;
+use std::{fmt::Debug, sync::Arc};
 
 use glam::DVec3;
 
 use crate::{
     math::{Color, Ray},
-    render::HitRecord,
+    render::{HitRecord, NullMaterial, null_material_ptr},
 };
 
 pub struct ScatterData {
@@ -12,7 +12,7 @@ pub struct ScatterData {
     pub scattered: Ray,
 }
 
-pub trait Material {
+pub trait Material: Debug {
     fn scatter(&self, _ray_in: &Ray, _rec: &HitRecord) -> Option<ScatterData> {
         None
     }

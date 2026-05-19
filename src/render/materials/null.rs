@@ -15,5 +15,7 @@ impl Material for NullMaterial {
 }
 
 pub fn null_material_ptr() -> Arc<NullMaterial> {
-    Arc::new(NullMaterial::default())
+    Arc::new(NULL)
 }
+
+const NULL: NullMaterial = NullMaterial {};

@@ -1,12 +1,16 @@
 use crate::{
     math::{Bounds3, DInterval, Ray},
-    render::{HitRecord, Triangle},
+    render::{HitRecord, Triangle, TriangleMesh},
 };
 
 // TODO: add triangle, hittablelist, bvhnode, etc
 pub enum Hittable {
     Dummy,
     Triangle(Triangle),
+    // This is a Box because enums are sized according to their largest possible value. A
+    // TriangleMesh can be enormous, so we want to store it in a Box so that it doesn't make
+    // Hittable instances be really really big.
+    TriangleMesh(Box<TriangleMesh>),
 }
 
 impl Hittable {
@@ -14,6 +18,7 @@ impl Hittable {
         match self {
             Hittable::Dummy => None,
             Hittable::Triangle(tri) => tri.hit(ray, ray_t),
+            Hittable::TriangleMesh(mesh) => mesh.hit(ray, ray_t),
         }
     }
 
@@ -21,6 +26,7 @@ impl Hittable {
         match self {
             Hittable::Dummy => Bounds3::EMPTY,
             Hittable::Triangle(tri) => tri.aabb(),
+            Hittable::TriangleMesh(mesh) => mesh.aabb(),
         }
     }
 }
@@ -32,7 +38,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_hit_returns_none() {
+    fn test_hit_dummy_hittable_returns_none() {
         let foo = Hittable::Dummy;
         let ray = Ray::new(DVec3::ZERO, DVec3::new(0.0, 0.0, -1.0));
         let ray_t = DInterval::UNIVERSE;

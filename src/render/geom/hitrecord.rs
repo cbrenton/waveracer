@@ -27,7 +27,7 @@ impl HitRecord {
             outward_normal
         } else {
             -outward_normal
-        }
+        };
     }
 }
 

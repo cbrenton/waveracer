@@ -1,56 +1,68 @@
-use glam::DVec3;
+use std::{collections::LinkedList, mem::take};
 
-use crate::{
-    math::Color,
-    render::{DummyRenderer, FrameData, Hittable},
-};
+use crate::render::{CameraState, DummyRenderer, FrameData, Hittable, LerpTransition};
 
 pub struct VideoCamera {
     vfov: f64,
     renderer: DummyRenderer,
-    pos: DVec3,
-    look_at: DVec3,
-    up: DVec3,
+    transitions: LinkedList<LerpTransition>,
     pub cur_frame: i32,
     pub total_frames: i32,
+    // TODO: this is gnarly. I should ask somebody if there's a better way
+    trans_iterator: Option<Box<dyn Iterator<Item = CameraState>>>,
 }
 
 impl VideoCamera {
     pub fn new(vfov: f64, renderer: DummyRenderer) -> Self {
-        let camera_look_from = DVec3::ZERO;
-        let camera_look_at = DVec3::new(0.0, 0.0, -1.0);
-        let camera_up = DVec3::new(0.0, 1.0, 0.0);
         Self {
             vfov,
             renderer,
-            pos: camera_look_from,
-            look_at: camera_look_at,
-            up: camera_up,
+            transitions: LinkedList::new(),
             cur_frame: 0,
-            total_frames: 10,
+            total_frames: 20,
+            trans_iterator: None,
         }
     }
 
-    pub fn capture_frame(&mut self, world: &[Hittable]) -> FrameData {
-        self.cur_frame += 1;
+    pub fn add_transition(&mut self, transition: LerpTransition) {
+        self.transitions.push_back(transition);
+    }
+
+    pub fn capture_frame(&mut self, world: &[Hittable]) -> Option<FrameData> {
+        if !self.is_rolling() {
+            // TODO: improve this
+            panic!("camera isn't rolling");
+        }
         let pixels = self.renderer.render(world);
-        FrameData {
+        let state = self.trans_iterator.as_mut().and_then(Iterator::next);
+        // TODO: so gross. make this better
+        if state.is_none() {
+            self.trans_iterator = None;
+            return None;
+        }
+        dbg!(state);
+        let result = FrameData {
             w: 1,
             h: 1,
             pixels,
-            frame_number: self.cur_frame - 1,
+            frame_number: self.cur_frame,
             t: 0.0,
-        }
+        };
+        self.cur_frame += 1;
+        Some(result)
     }
 
-    /*
-    // TODO
-    fn roll(&self, renderer: impl Renderer) {
-        self.renderer.prebake();
+    pub fn roll(&mut self) {
+        // self.renderer.prebake();
+
+        // use std::mem::take to take ownership of the transitions field of a mutable struct
+        let transitions = take(&mut self.transitions);
+        // sigh...OPTION of FAT POINTER of something that IMPLEMENTS iterator OVER camerastate
+        self.trans_iterator = Some(Box::new(transitions.into_iter().flatten()));
     }
-    */
 
     pub fn is_rolling(&self) -> bool {
-        self.cur_frame <= self.total_frames
+        // TODO: I don't think this is correct
+        self.trans_iterator.is_some() // self.cur_frame <= self.total_frames
     }
 }

@@ -1,10 +1,12 @@
 use crate::math::Color;
 
+#[derive(Clone)]
 pub struct RenderConfig {
     pub width: usize,
     pub height: usize,
     pub samples_per_pixel: i32,
     pub max_depth: i32,
+    // TODO: this should belong to the scene/world, not the render config
     pub background: Color,
 }
 

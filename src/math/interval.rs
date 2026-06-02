@@ -1,6 +1,7 @@
 use std::ops::{Add, Mul, Sub};
 
 pub type DInterval = Interval<f64>;
+pub type IInterval = Interval<i32>;
 
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 pub struct Interval<T> {
@@ -37,6 +38,23 @@ impl<T: Add<Output = T> + Sub<Output = T> + PartialOrd + Copy> Interval<T> {
         } else {
             x
         }
+    }
+}
+
+impl IInterval {
+    pub const EMPTY: Self = Interval {
+        min: i32::MAX,
+        max: i32::MIN,
+    };
+
+    pub const UNIVERSE: Self = Interval {
+        min: i32::MIN,
+        max: i32::MAX,
+    };
+
+    /// Converts range (0.0..1.0) to (min..max)
+    pub fn scale(&self, x: f64) -> i32 {
+        (x * self.size() as f64) as i32 + self.min
     }
 }
 

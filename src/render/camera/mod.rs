@@ -1,7 +1,7 @@
-mod basic_camera;
+mod frame_data;
 mod render_config;
 
-pub use basic_camera::*;
+pub use frame_data::FrameData;
 pub use render_config::RenderConfig;
 
 use glam::DVec3;
@@ -14,6 +14,10 @@ use std::{
 
 use crate::{math::Color, render::Hittable};
 
-pub trait Camera {
-    fn render(&self, render_config: &RenderConfig, world: &[Hittable]) -> Vec<Color>;
+pub struct DummyRenderer {}
+
+impl DummyRenderer {
+    fn render(&self, _world: &[Hittable]) -> Vec<Color> {
+        vec![Color::default()]
+    }
 }

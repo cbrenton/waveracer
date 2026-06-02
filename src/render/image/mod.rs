@@ -1,3 +1,3 @@
-mod png_image_writer;
+mod multi_file_png_writer;
 
-pub use png_image_writer::*;
+pub use multi_file_png_writer::*;

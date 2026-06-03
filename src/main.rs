@@ -26,9 +26,9 @@ fn main() {
         up: DVec3::new(0.0, 1.0, 0.0),
     };
     // TODO: improve this interface so that we're only passing end camera state
-    camera.add_transition(LerpTransition::new(start.clone(), start.clone(), 10));
-    camera.add_transition(LerpTransition::new(start.clone(), end.clone(), 10));
-    camera.add_transition(LerpTransition::new(end, start, 10));
+    camera.add_transition(LerpTransition::new(&start, &start, 10));
+    camera.add_transition(LerpTransition::new(&start, &end, 10));
+    camera.add_transition(LerpTransition::new(&end, &start, 10));
 
     camera.roll();
 

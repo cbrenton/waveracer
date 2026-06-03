@@ -9,18 +9,22 @@ pub struct LerpTransition {
 }
 
 impl LerpTransition {
-    pub fn new(start: CameraState, end: CameraState, ticks: i32) -> Self {
+    pub fn new(start: &CameraState, end: &CameraState, ticks: i32) -> Self {
         Self {
-            start_state: start.clone(),
+            start_state: *start,
             ticks,
             cur_tick: 0,
             // TODO: this currently creates one too many frames. I'm too foggy to fix it yet
-            delta: (end - start) / ticks as f64,
+            delta: (*end - *start) / ticks as f64,
         }
     }
 
+    pub fn hold(hold_state: &CameraState, ticks: i32) -> Self {
+        Self::new(hold_state, hold_state, ticks)
+    }
+
     fn tick(&self, tick: i32) -> CameraState {
-        self.start_state.clone() + self.delta.clone() * tick as f64
+        self.start_state + self.delta * tick as f64
     }
 }
 
@@ -32,10 +36,7 @@ impl Iterator for LerpTransition {
             None
         } else {
             self.cur_tick += 1;
-            Some(self.tick(self.cur_tick - 1))
+            Some(self.tick(self.cur_tick))
         }
     }
 }
-
-// 0.0 -> 1.0, 2: 0.0, 0.5
-// 0.0 -> 1.0, 3: 0.0, 0.3, 0.6

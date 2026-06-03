@@ -1,9 +1,10 @@
 use crate::{
     math::{Bounds3, DInterval, Ray},
-    render::{HitRecord, Triangle, TriangleMesh},
+    render::{HitRecord, Sphere, Triangle, TriangleMesh},
 };
 
 // TODO: add triangle, hittablelist, bvhnode, etc
+#[derive(Debug)]
 pub enum Hittable {
     Dummy,
     Triangle(Triangle),
@@ -11,6 +12,7 @@ pub enum Hittable {
     // TriangleMesh can be enormous, so we want to store it in a Box so that it doesn't make
     // Hittable instances be really really big.
     TriangleMesh(Box<TriangleMesh>),
+    Sphere(Sphere),
 }
 
 impl Hittable {
@@ -19,6 +21,7 @@ impl Hittable {
             Hittable::Dummy => None,
             Hittable::Triangle(tri) => tri.hit(ray, ray_t),
             Hittable::TriangleMesh(mesh) => mesh.hit(ray, ray_t),
+            Hittable::Sphere(sphere) => sphere.hit(ray, ray_t),
         }
     }
 
@@ -27,6 +30,7 @@ impl Hittable {
             Hittable::Dummy => Bounds3::EMPTY,
             Hittable::Triangle(tri) => tri.aabb(),
             Hittable::TriangleMesh(mesh) => mesh.aabb(),
+            Hittable::Sphere(sphere) => sphere.aabb(),
         }
     }
 }

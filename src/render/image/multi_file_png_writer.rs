@@ -59,8 +59,10 @@ impl MultiFilePngWriter {
     }
 
     fn output_filename(&self, frame: FrameData) -> String {
-        self.filename_template
-            .replace("{{frame_number}}", frame.frame_number.to_string().as_str())
+        self.filename_template.replace(
+            "{{frame_number}}",
+            format!("{:09}", frame.frame_number).as_str(),
+        )
     }
 
     pub const INTENSITY: IInterval = IInterval { min: 0, max: 255 };

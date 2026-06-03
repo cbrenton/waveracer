@@ -1,7 +1,7 @@
 use glam::DVec3;
 use rt2::render::CameraState;
-use rt2::render::DummyRenderer;
 use rt2::render::LerpTransition;
+use rt2::render::MonteCarloRenderer;
 use rt2::render::MultiFilePngWriter;
 use rt2::render::VideoCamera;
 use rt2::scene::sample_scene;
@@ -12,23 +12,28 @@ fn main() {
     //defocus_angle: 1.0,
     //focus_distance: 1.4,
 
-    let renderer = DummyRenderer {};
+    let renderer = MonteCarloRenderer {
+        samples_per_pixel: 20,
+        max_depth: 5,
+    };
 
-    let mut camera = VideoCamera::new(90.0, renderer);
+    let width = 1000;
+    let height = 600;
+    let mut camera = VideoCamera::new(90.0, renderer, width, height);
     let start = CameraState {
-        pos: DVec3::ZERO,
+        pos: DVec3::new(0.0, 0.0, 3.0),
         look_at: DVec3::new(0.0, 0.0, -1.0),
         up: DVec3::new(0.0, 1.0, 0.0),
     };
     let end = CameraState {
-        pos: DVec3::new(3.0, 0.0, 0.0),
+        pos: DVec3::new(0.0, 0.0, 0.5),
         look_at: DVec3::new(0.0, 0.0, -1.0),
         up: DVec3::new(0.0, 1.0, 0.0),
     };
     // TODO: improve this interface so that we're only passing end camera state
-    camera.add_transition(LerpTransition::new(&start, &start, 10));
-    camera.add_transition(LerpTransition::new(&start, &end, 10));
-    camera.add_transition(LerpTransition::new(&end, &start, 10));
+    camera.add_transition(LerpTransition::new(&start, &start, 1));
+    camera.add_transition(LerpTransition::new(&start, &end, 100));
+    // camera.add_transition(LerpTransition::new(&end, &start, 100));
 
     camera.roll();
 

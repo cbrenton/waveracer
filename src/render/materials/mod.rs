@@ -1,10 +1,12 @@
 mod dielectric;
+mod diffuse_light;
 mod lambertian;
 mod metal;
 mod null;
 mod texture;
 
 pub use dielectric::Dielectric;
+pub use diffuse_light::DiffuseLight;
 pub use lambertian::Lambertian;
 pub use metal::Metal;
 pub use null::{NullMaterial, null_material_ptr};

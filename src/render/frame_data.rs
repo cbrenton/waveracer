@@ -1,8 +1,8 @@
 use crate::math::Color;
 
 pub struct FrameData {
-    pub w: i32,
-    pub h: i32,
+    pub w: usize,
+    pub h: usize,
     pub pixels: Vec<Color>,
     pub frame_number: i32,
     pub t: f64,

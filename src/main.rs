@@ -33,7 +33,7 @@ fn main() {
     // TODO: improve this interface so that we're only passing end camera state
     camera.add_transition(LerpTransition::new(&start, &start, 1));
     camera.add_transition(LerpTransition::new(&start, &end, 100));
-    // camera.add_transition(LerpTransition::new(&end, &start, 100));
+    camera.add_transition(LerpTransition::new(&end, &start, 100));
 
     camera.roll();
 

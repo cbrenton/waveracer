@@ -3,7 +3,7 @@ use crate::render::CameraState;
 #[derive(Debug)]
 pub struct LerpTransition {
     start_state: CameraState,
-    ticks: i32,
+    pub ticks: i32,
     cur_tick: i32,
     delta: CameraState,
 }

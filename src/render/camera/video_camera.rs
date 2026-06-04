@@ -28,8 +28,10 @@ pub struct VideoCamera {
     pub cur_frame: i32,
     pub total_frames: i32,
     // TODO: this is gnarly. I should ask somebody if there's a better way
+    // should I make this a reference and add a lifetime to the struct?
     trans_iterator: Option<Box<dyn Iterator<Item = CameraState>>>,
     defocus_angle: f64,
+    is_rolling: bool,
     // TODO: move to Film
     pub width: usize,
     pub height: usize,
@@ -42,31 +44,35 @@ impl VideoCamera {
             renderer,
             transitions: LinkedList::new(),
             cur_frame: 0,
-            total_frames: 20,
+            total_frames: 0,
             trans_iterator: None,
             // TODO: take this as param/put it somewhere else
             defocus_angle: 1.0,
             width,
             height,
+            is_rolling: false,
         }
     }
 
     pub fn add_transition(&mut self, transition: LerpTransition) {
+        self.total_frames += transition.ticks;
         self.transitions.push_back(transition);
     }
 
     pub fn capture_frame(&mut self, world: &[Hittable]) -> Option<FrameData> {
-        if !self.is_rolling() {
+        if !self.is_rolling {
             // TODO: improve this
             panic!("camera isn't rolling");
         }
         let state = self.trans_iterator.as_mut().and_then(Iterator::next);
         // TODO: so gross. make this better
         if state.is_none() {
+            // TODO: this is not a great representation of states UNROLLED -> ROLLING -> ROLLED.
+            // maybe make this an enum
+            self.is_rolling = false;
             self.trans_iterator = None;
             return None;
         }
-        // dbg!(state);
         let pixels = self.foo(world, &state.unwrap());
         let result = FrameData {
             w: self.width,
@@ -82,6 +88,8 @@ impl VideoCamera {
     pub fn roll(&mut self) {
         // self.renderer.prebake();
 
+        self.is_rolling = true;
+
         // use std::mem::take to take ownership of the transitions field of a mutable struct
         let transitions = take(&mut self.transitions);
         // sigh...OPTION of FAT POINTER of something that IMPLEMENTS iterator OVER camerastate
@@ -90,7 +98,8 @@ impl VideoCamera {
 
     pub fn is_rolling(&self) -> bool {
         // TODO: I don't think this is correct
-        self.trans_iterator.is_some() // self.cur_frame <= self.total_frames
+        // self.trans_iterator.is_some() // self.cur_frame <= self.total_frames
+        self.is_rolling
     }
 
     // TODO: rename. also just redo this entire file

@@ -1,4 +1,5 @@
 use glam::DVec3;
+use kdam::{BarExt, tqdm};
 use rt2::render::CameraState;
 use rt2::render::LerpTransition;
 use rt2::render::MonteCarloRenderer;
@@ -9,12 +10,9 @@ use rt2::scene::sample_scene;
 fn main() {
     let scene = sample_scene();
 
-    //defocus_angle: 1.0,
-    //focus_distance: 1.4,
-
     let renderer = MonteCarloRenderer {
         samples_per_pixel: 20,
-        max_depth: 5,
+        max_depth: 10,
     };
 
     let width = 1000;
@@ -31,7 +29,7 @@ fn main() {
         up: DVec3::new(0.0, 1.0, 0.0),
     };
     // TODO: improve this interface so that we're only passing end camera state
-    camera.add_transition(LerpTransition::new(&start, &start, 1));
+    camera.add_transition(LerpTransition::hold(&start, 10));
     camera.add_transition(LerpTransition::new(&start, &end, 100));
     camera.add_transition(LerpTransition::new(&end, &start, 100));
 
@@ -39,25 +37,19 @@ fn main() {
 
     let image_writer = MultiFilePngWriter::new("./output", "frame_{{frame_number}}");
 
+    let mut bar = tqdm!(
+        total = camera.total_frames,
+        position = 0,
+        desc = "OVERALL",
+        colour = "green"
+    );
+    bar.refresh().unwrap();
     while camera.is_rolling() {
-        println!("{}/{} frames", camera.cur_frame, camera.total_frames);
         let result = camera.capture_frame(&scene.world);
         match result {
             Some(frame) => image_writer.write(frame),
             None => println!("done"),
         }
+        bar.update(1).unwrap();
     }
-
-    /*
-    let render_config = RenderConfig {
-        width: 1080,
-        height: 720,
-        samples_per_pixel: 100,
-        max_depth: 10,
-        background: Color::splat(0.5),
-    };
-
-    let frame_pixels = BasicCamera::new(camera_config).render(&render_config, &scene.world);
-    PngImageWriter::new(&render_config).write(frame_pixels, PathBuf::from("./output/out.png"));
-    */
 }

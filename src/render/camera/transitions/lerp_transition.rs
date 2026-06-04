@@ -3,13 +3,13 @@ use crate::render::CameraState;
 #[derive(Debug)]
 pub struct LerpTransition {
     start_state: CameraState,
-    pub ticks: i32,
-    cur_tick: i32,
+    pub ticks: usize,
+    cur_tick: usize,
     delta: CameraState,
 }
 
 impl LerpTransition {
-    pub fn new(start: &CameraState, end: &CameraState, ticks: i32) -> Self {
+    pub fn new(start: &CameraState, end: &CameraState, ticks: usize) -> Self {
         Self {
             start_state: *start,
             ticks,
@@ -19,11 +19,11 @@ impl LerpTransition {
         }
     }
 
-    pub fn hold(hold_state: &CameraState, ticks: i32) -> Self {
+    pub fn hold(hold_state: &CameraState, ticks: usize) -> Self {
         Self::new(hold_state, hold_state, ticks)
     }
 
-    fn tick(&self, tick: i32) -> CameraState {
+    fn tick(&self, tick: usize) -> CameraState {
         self.start_state + self.delta * tick as f64
     }
 }

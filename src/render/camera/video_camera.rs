@@ -26,7 +26,7 @@ pub struct VideoCamera {
     renderer: MonteCarloRenderer,
     transitions: LinkedList<LerpTransition>,
     pub cur_frame: i32,
-    pub total_frames: i32,
+    pub total_frames: usize,
     // TODO: this is gnarly. I should ask somebody if there's a better way
     // should I make this a reference and add a lifetime to the struct?
     trans_iterator: Option<Box<dyn Iterator<Item = CameraState>>>,
@@ -108,7 +108,11 @@ impl VideoCamera {
 
         let frame_config = self.generate_frame_config(state);
 
-        let mut bar = tqdm!(total = self.width * self.height);
+        let mut bar = tqdm!(
+            total = self.width * self.height,
+            position = 1,
+            desc = "  frame"
+        );
         for y in 0..self.height {
             for x in 0..self.width {
                 let mut pixel_color = Color::ZERO;
@@ -160,7 +164,7 @@ impl VideoCamera {
             camera_center - (focus_distance * w) - viewport_u / 2.0 - viewport_v / 2.0;
 
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-        dbg!(pixel00_loc);
+        // dbg!(pixel00_loc);
 
         let defocus_radius = focus_distance * (self.defocus_angle / 2.0).to_radians().tan();
         let defocus_disk_u = u * defocus_radius;

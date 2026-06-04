@@ -24,6 +24,7 @@ impl MultiFilePngWriter {
         }
     }
 
+    // TODO: return a result(???) instead of unwrapping?
     pub fn write(&self, frame: FrameData) {
         let mut buf = RgbImage::new(frame.w as u32, frame.h as u32);
         for y in 0..frame.h {
@@ -44,7 +45,8 @@ impl MultiFilePngWriter {
 
         // write image
         match buf.save(output.clone()) {
-            Ok(_) => println!("Wrote file to {:?}", output),
+            // Ok(_) => println!("Wrote file to {:?}", output),
+            Ok(_) => (),
             Err(err) => println!("Error while writing image: {}", err),
         }
     }

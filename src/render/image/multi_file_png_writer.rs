@@ -30,7 +30,7 @@ impl MultiFilePngWriter {
         for y in 0..frame.h {
             for x in 0..frame.w {
                 let pixel = buf.get_pixel_mut(x as u32, y as u32);
-                *pixel = self.convert_pixel(frame.pixels[(y * frame.w + x) as usize]);
+                *pixel = self.convert_pixel(frame.pixels[y * frame.w + x]);
             }
         }
 
@@ -74,7 +74,7 @@ impl MultiFilePngWriter {
 mod tests {
     use super::*;
 
-    fn dummy_frame(frame_number: i32) -> FrameData {
+    fn dummy_frame(frame_number: usize) -> FrameData {
         FrameData {
             w: 1,
             h: 1,

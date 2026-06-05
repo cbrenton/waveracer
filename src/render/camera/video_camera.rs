@@ -59,11 +59,12 @@ impl<T: Renderer> VideoCamera<T> {
     }
 
     // TODO: change this from Option to Result
-    fn render_frame(&self, world: &[Hittable], camera_state: &CameraState) -> FrameData {
-        let frame_number = self.cur_frame;
-        // TODO: fix
-        //self.cur_frame += 1;
-
+    fn render_frame(
+        &self,
+        world: &[Hittable],
+        camera_state: &CameraState,
+        frame_number: usize,
+    ) -> FrameData {
         let mut pixels: Vec<Color> = vec![];
 
         let frame_config = self.generate_frame_config(camera_state);
@@ -102,12 +103,13 @@ impl<T: Renderer> VideoCamera<T> {
         }
     }
 
-    pub fn render_frames(&mut self, world: &[Hittable]) -> impl Iterator<Item = FrameData> {
+    pub fn render_frames(&self, world: &[Hittable]) -> impl Iterator<Item = FrameData> {
         self.transitions
             .clone()
             .into_iter()
             .flatten()
-            .map(move |s| self.render_frame(world, &s))
+            .enumerate()
+            .map(move |(frame, s)| self.render_frame(world, &s, frame))
     }
 
     fn generate_frame_config(&self, state: &CameraState) -> CameraFrameState {

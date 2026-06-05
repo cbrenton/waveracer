@@ -11,7 +11,7 @@ fn main() {
     let scene = sample_scene();
 
     let renderer = MonteCarloRenderer {
-        samples_per_pixel: 20,
+        samples_per_pixel: 100,
         max_depth: 10,
     };
 
@@ -33,8 +33,6 @@ fn main() {
     camera.add_transition(LerpTransition::new(&start, &end, 100));
     camera.add_transition(LerpTransition::new(&end, &start, 100));
 
-    // camera.roll();
-
     let image_writer = MultiFilePngWriter::new("./output", "frame_{{frame_number}}");
 
     let mut progress = tqdm!(total = camera.total_frames);
@@ -43,23 +41,4 @@ fn main() {
         image_writer.write(frame);
         progress.update(1).unwrap();
     }
-
-    /*
-        camera
-            .rendered_frames(&scene.world)
-            .map(|x| image_writer.write(x));
-    */
-
-    /*
-    // for camera_state in camera.frames() {
-    //      camera.capture_frame(camera_state, &scene.world);
-    while camera.is_rolling() {
-        let result = camera.capture_frame(&scene.world);
-        match result {
-            Some(frame) => image_writer.write(frame),
-            None => println!("done"),
-        }
-        bar.update(1).unwrap();
-    }
-    */
 }

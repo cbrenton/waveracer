@@ -33,17 +33,26 @@ fn main() {
     camera.add_transition(LerpTransition::new(&start, &end, 100));
     camera.add_transition(LerpTransition::new(&end, &start, 100));
 
-    camera.roll();
+    // camera.roll();
 
     let image_writer = MultiFilePngWriter::new("./output", "frame_{{frame_number}}");
 
-    let mut bar = tqdm!(
-        total = camera.total_frames,
-        position = 0,
-        desc = "OVERALL",
-        colour = "green"
-    );
-    bar.refresh().unwrap();
+    let mut progress = tqdm!(total = camera.total_frames);
+    progress.refresh().unwrap();
+    for frame in camera.render_frames(&scene.world) {
+        image_writer.write(frame);
+        progress.update(1).unwrap();
+    }
+
+    /*
+        camera
+            .rendered_frames(&scene.world)
+            .map(|x| image_writer.write(x));
+    */
+
+    /*
+    // for camera_state in camera.frames() {
+    //      camera.capture_frame(camera_state, &scene.world);
     while camera.is_rolling() {
         let result = camera.capture_frame(&scene.world);
         match result {
@@ -52,4 +61,5 @@ fn main() {
         }
         bar.update(1).unwrap();
     }
+    */
 }

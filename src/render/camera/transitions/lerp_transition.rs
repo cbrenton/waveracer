@@ -1,11 +1,12 @@
 use crate::render::CameraState;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LerpTransition {
     start_state: CameraState,
     pub ticks: usize,
     cur_tick: usize,
     delta: CameraState,
+    pub name: String,
 }
 
 impl LerpTransition {
@@ -16,6 +17,7 @@ impl LerpTransition {
             cur_tick: 0,
             // TODO: this currently creates one too many frames. I'm too foggy to fix it yet
             delta: (*end - *start) / ticks as f64,
+            name: format!("{} frame lerp", ticks),
         }
     }
 
@@ -25,6 +27,10 @@ impl LerpTransition {
 
     fn tick(&self, tick: usize) -> CameraState {
         self.start_state + self.delta * tick as f64
+    }
+
+    pub fn ticks_left(&self) -> usize {
+        self.ticks - self.cur_tick
     }
 }
 

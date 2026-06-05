@@ -1,10 +1,18 @@
 use glam::DVec3;
 use kdam::tqdm;
+use mockall::automock;
 
 use crate::{
     math::{ALMOST_ZERO, Color, DInterval, Ray},
     render::{HitRecord, Hittable},
 };
+
+#[automock]
+pub trait Renderer {
+    fn ray_color(&self, ray: &Ray, world: &[Hittable], depth: i32) -> Color;
+    // TODO: change this
+    fn samples_per_pixel(&self) -> i32;
+}
 
 #[derive(Debug)]
 pub struct MonteCarloRenderer {
@@ -12,8 +20,8 @@ pub struct MonteCarloRenderer {
     pub max_depth: i32,
 }
 
-impl MonteCarloRenderer {
-    pub fn ray_color(&self, ray: &Ray, world: &[Hittable], depth: i32) -> Color {
+impl Renderer for MonteCarloRenderer {
+    fn ray_color(&self, ray: &Ray, world: &[Hittable], depth: i32) -> Color {
         if depth >= self.max_depth {
             return DVec3::ZERO;
         }
@@ -44,5 +52,9 @@ impl MonteCarloRenderer {
             // camera_render_config.background
             Color::splat(0.0)
         }
+    }
+
+    fn samples_per_pixel(&self) -> i32 {
+        self.samples_per_pixel
     }
 }

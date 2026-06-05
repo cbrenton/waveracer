@@ -8,9 +8,13 @@ use crate::{
         Color, Ray,
         random::{random_double, random_in_unit_disk},
     },
-    render::{CameraState, FrameData, Hittable, LerpTransition, MonteCarloRenderer},
+    render::{
+        CameraState, FrameData, Hittable, LerpTransition, MonteCarloRenderer,
+        monte_carlo_renderer::Renderer,
+    },
 };
 
+// TODO: move somewhere else, take generate_primary_ray with it
 #[derive(Debug)]
 struct CameraFrameState {
     pixel00_loc: DVec3,
@@ -21,92 +25,48 @@ struct CameraFrameState {
     defocus_disk_v: DVec3,
 }
 
-pub struct VideoCamera {
+pub struct VideoCamera<T> {
     vfov: f64,
-    renderer: MonteCarloRenderer,
+    renderer: T,
     transitions: LinkedList<LerpTransition>,
     pub cur_frame: i32,
     pub total_frames: usize,
-    // TODO: this is gnarly. I should ask somebody if there's a better way
-    // should I make this a reference and add a lifetime to the struct?
-    trans_iterator: Option<Box<dyn Iterator<Item = CameraState>>>,
     defocus_angle: f64,
-    is_rolling: bool,
     // TODO: move to Film
     pub width: usize,
     pub height: usize,
 }
 
-impl VideoCamera {
-    pub fn new(vfov: f64, renderer: MonteCarloRenderer, width: usize, height: usize) -> Self {
+impl<T: Renderer> VideoCamera<T> {
+    pub fn new(vfov: f64, renderer: T, width: usize, height: usize) -> Self {
         Self {
             vfov,
             renderer,
             transitions: LinkedList::new(),
             cur_frame: 0,
             total_frames: 0,
-            trans_iterator: None,
             // TODO: take this as param/put it somewhere else
             defocus_angle: 1.0,
             width,
             height,
-            is_rolling: false,
         }
     }
 
     pub fn add_transition(&mut self, transition: LerpTransition) {
         self.total_frames += transition.ticks;
+        // TODO: make this a method
         self.transitions.push_back(transition);
     }
 
-    pub fn capture_frame(&mut self, world: &[Hittable]) -> Option<FrameData> {
-        if !self.is_rolling {
-            // TODO: improve this
-            panic!("camera isn't rolling");
-        }
-        let state = self.trans_iterator.as_mut().and_then(Iterator::next);
-        // TODO: so gross. make this better
-        if state.is_none() {
-            // TODO: this is not a great representation of states UNROLLED -> ROLLING -> ROLLED.
-            // maybe make this an enum
-            self.is_rolling = false;
-            self.trans_iterator = None;
-            return None;
-        }
-        let pixels = self.foo(world, &state.unwrap());
-        let result = FrameData {
-            w: self.width,
-            h: self.height,
-            pixels,
-            frame_number: self.cur_frame,
-            t: 0.0,
-        };
-        self.cur_frame += 1;
-        Some(result)
-    }
+    // TODO: change this from Option to Result
+    fn render_frame(&self, world: &[Hittable], camera_state: &CameraState) -> FrameData {
+        let frame_number = self.cur_frame;
+        // TODO: fix
+        //self.cur_frame += 1;
 
-    pub fn roll(&mut self) {
-        // self.renderer.prebake();
+        let mut pixels: Vec<Color> = vec![];
 
-        self.is_rolling = true;
-
-        // use std::mem::take to take ownership of the transitions field of a mutable struct
-        let transitions = take(&mut self.transitions);
-        // sigh...OPTION of FAT POINTER of something that IMPLEMENTS iterator OVER camerastate
-        self.trans_iterator = Some(Box::new(transitions.into_iter().flatten()));
-    }
-
-    pub fn is_rolling(&self) -> bool {
-        // TODO: I don't think this is correct
-        // self.trans_iterator.is_some() // self.cur_frame <= self.total_frames
-        self.is_rolling
-    }
-
-    // TODO: rename. also just redo this entire file
-    fn foo(&self, world: &[Hittable], state: &CameraState) -> Vec<Color> {
-        let mut result: Vec<Color> = vec![];
-
-        let frame_config = self.generate_frame_config(state);
+        let frame_config = self.generate_frame_config(camera_state);
 
         let mut bar = tqdm!(
             total = self.width * self.height,
@@ -119,19 +79,35 @@ impl VideoCamera {
 
                 // cast SAMPLES_PER_PIXEL random-ish rays and then divide total color by
                 // SAMPLES_PER_PIXEL for simple antialiasing
-                for _ in 0..self.renderer.samples_per_pixel {
-                    let ray = self.get_ray(x, y, &frame_config);
+                for _ in 0..self.renderer.samples_per_pixel() {
+                    let offset = self.sample_square();
+
+                    let ray = self.generate_primary_ray(x, y, offset, &frame_config);
 
                     pixel_color += self.renderer.ray_color(&ray, world, 0);
                 }
                 // NOTE: I chose to not include samples in my progress bar for the sake of having a
                 // semi-readable number
                 bar.update(1).unwrap();
-                result.push(pixel_color / self.renderer.samples_per_pixel as f64);
+                pixels.push(pixel_color / self.renderer.samples_per_pixel() as f64);
             }
         }
 
-        result
+        FrameData {
+            w: self.width,
+            h: self.height,
+            pixels,
+            frame_number,
+            t: 0.0,
+        }
+    }
+
+    pub fn render_frames(&mut self, world: &[Hittable]) -> impl Iterator<Item = FrameData> {
+        self.transitions
+            .clone()
+            .into_iter()
+            .flatten()
+            .map(move |s| self.render_frame(world, &s))
     }
 
     fn generate_frame_config(&self, state: &CameraState) -> CameraFrameState {
@@ -182,10 +158,13 @@ impl VideoCamera {
 
     /// Spawns a single ray at pixel [x, y] using the CameraRenderConfig's settings. For this
     /// camera the ray is offset by the defocus amount to add depth of field
-    fn get_ray(&self, x: usize, y: usize, frame_config: &CameraFrameState) -> Ray {
-        let offset = self.sample_square();
-        // let offset = DVec3::ZERO;
-
+    fn generate_primary_ray(
+        &self,
+        x: usize,
+        y: usize,
+        offset: DVec3,
+        frame_config: &CameraFrameState,
+    ) -> Ray {
         let pixel_center = frame_config.pixel00_loc
             + ((x as f64 + offset.x) * frame_config.pixel_delta_u)
             + ((y as f64 + offset.y) * frame_config.pixel_delta_v);
@@ -212,3 +191,85 @@ impl VideoCamera {
         DVec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
     }
 }
+
+/*
+#[cfg(test)]
+mod tests {
+    use crate::render::monte_carlo_renderer::MockRenderer;
+
+    use super::*;
+
+    #[test]
+    fn test_add_transition_updates_total_frames() {
+        let ren = MockRenderer::new();
+        let mut cam = VideoCamera::new(90.0, ren, 10, 10);
+
+        let trans = LerpTransition::hold(&CameraState::default(), 10);
+        cam.add_transition(trans);
+        assert_eq!(cam.total_frames, 10);
+
+        let trans2 = LerpTransition::hold(&CameraState::default(), 15);
+        cam.add_transition(trans2);
+        assert_eq!(cam.total_frames, 25);
+    }
+
+    #[test]
+    fn test_add_transition_appends_transition() {
+        let ren = MockRenderer::new();
+        let mut cam = VideoCamera::new(90.0, ren, 10, 10);
+
+        let trans = LerpTransition::hold(&CameraState::default(), 10);
+        cam.add_transition(trans);
+
+        assert_eq!(cam.transitions.len(), 1);
+
+        let trans2 = LerpTransition::hold(&CameraState::default(), 15);
+        cam.add_transition(trans2);
+        assert_eq!(cam.transitions.len(), 2);
+    }
+
+    #[test]
+    #[should_panic = "camera isn't rolling"]
+    fn test_capture_frame_panics_if_not_rolling() {
+        let ren = MockRenderer::new();
+        let mut cam = VideoCamera::new(90.0, ren, 10, 10);
+        let world: Vec<Hittable> = vec![];
+        cam.capture_frame(&world);
+    }
+
+    #[test]
+    fn test_capture_frame_advances_frame() {
+        let ren = MockRenderer::new();
+        let mut cam = VideoCamera::new(90.0, ren, 10, 10);
+        let world: Vec<Hittable> = vec![];
+
+        cam.roll();
+        assert_eq!(cam.cur_frame, 0);
+
+        cam.capture_frame(&world);
+        assert_eq!(cam.cur_frame, 1);
+    }
+
+    #[test]
+    fn test_capture_frame_advances_cur_transition_if_not_finished() {
+        let mut ren = MockRenderer::new();
+        ren.expect_samples_per_pixel().returning(|| 1);
+        ren.expect_ray_color().returning(|_, _, _| Color::ZERO);
+        let mut cam = VideoCamera::new(90.0, ren, 10, 10);
+        let world: Vec<Hittable> = vec![];
+
+        let trans = LerpTransition::hold(&CameraState::default(), 10);
+        cam.add_transition(trans);
+        cam.roll();
+
+        dbg!(cam.transitions);
+        println!("foo");
+        /*
+        assert_eq!(cam.transitions.front().unwrap().ticks_left(), 10);
+
+        cam.capture_frame(&world);
+        assert_eq!(cam.transitions.front().unwrap().ticks_left(), 9);
+        */
+    }
+}
+*/

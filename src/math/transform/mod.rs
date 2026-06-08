@@ -1,6 +1,10 @@
 mod lerp;
+mod rotate;
+mod slerp;
 
 pub use lerp::*;
+pub use rotate::*;
+pub use slerp::*;
 
 use glam::DVec3;
 

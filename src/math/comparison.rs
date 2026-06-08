@@ -9,3 +9,8 @@ pub const ALMOST_ZERO: f64 = 1e-6;
 pub fn near_zero(v: DVec3) -> bool {
     v.abs().max_element() < ALMOST_ZERO
 }
+
+/// Checks if two vectors are almost equivalent. Used to handle floating point precision errors
+pub fn almost_eq(lhs: DVec3, rhs: DVec3) -> bool {
+    lhs.abs_diff_eq(rhs, ALMOST_ZERO)
+}

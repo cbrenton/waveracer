@@ -1,7 +1,8 @@
 use glam::DVec3;
 use kdam::{BarExt, tqdm};
+use rt2::math::Lerp;
 use rt2::render::CameraState;
-use rt2::render::LerpTransition;
+use rt2::render::CameraTransition;
 use rt2::render::MonteCarloRenderer;
 use rt2::render::MultiFilePngWriter;
 use rt2::render::VideoCamera;
@@ -28,10 +29,12 @@ fn main() {
         look_at: DVec3::new(0.0, 0.0, -1.0),
         up: DVec3::new(0.0, 1.0, 0.0),
     };
-    // TODO: improve this interface so that we're only passing end camera state
-    camera.add_transition(LerpTransition::hold(&start, 10));
-    camera.add_transition(LerpTransition::new(&start, &end, 100));
-    camera.add_transition(LerpTransition::new(&end, &start, 100));
+
+    // TODO: maybe improve this interface so that we're only passing end camera state
+    let lerp = Lerp::end_early(start.pos, end.pos, 0.8);
+    let hold = Lerp::hold(start.look_at);
+    let up = Lerp::hold(start.up);
+    camera.add_transition(CameraTransition::new(lerp, hold, up, 10));
 
     let image_writer = MultiFilePngWriter::new("./output", "frame_{{frame_number}}");
 

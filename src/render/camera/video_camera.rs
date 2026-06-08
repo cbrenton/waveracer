@@ -9,7 +9,7 @@ use crate::{
         random::{random_double, random_in_unit_disk},
     },
     render::{
-        CameraState, FrameData, Hittable, LerpTransition, MonteCarloRenderer,
+        CameraState, CameraTransition, FrameData, Hittable, MonteCarloRenderer,
         monte_carlo_renderer::Renderer,
     },
 };
@@ -28,7 +28,7 @@ struct CameraFrameState {
 pub struct VideoCamera<T> {
     vfov: f64,
     renderer: T,
-    transitions: LinkedList<LerpTransition>,
+    transitions: LinkedList<CameraTransition>,
     pub cur_frame: i32,
     pub total_frames: usize,
     defocus_angle: f64,
@@ -52,9 +52,8 @@ impl<T: Renderer> VideoCamera<T> {
         }
     }
 
-    pub fn add_transition(&mut self, transition: LerpTransition) {
+    pub fn add_transition(&mut self, transition: CameraTransition) {
         self.total_frames += transition.ticks;
-        // TODO: make this a method
         self.transitions.push_back(transition);
     }
 

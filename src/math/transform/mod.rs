@@ -17,7 +17,7 @@ dyn_clone::clone_trait_object!(TransformFunc);
 mock! {
     pub TransformFunc {} // Defines the MockTransformFunc struct
 
-    // Implement your main trait
+    // Implement the trait
     impl TransformFunc for TransformFunc {
         fn at(&self, t: f64) -> Option<DVec3>;
     }

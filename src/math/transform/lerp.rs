@@ -46,29 +46,68 @@ impl Lerp {
             offset: start_time,
         }
     }
+
+    fn scaled_t(&self, t: f64) -> f64 {
+        ((t - self.offset) * self.scale).clamp(0.0, 1.0)
+    }
 }
 
 impl TransformFunc for Lerp {
     fn at(&self, t: f64) -> Option<DVec3> {
-        let t = (t - self.offset) * self.scale;
-        if t <= 0.0 {
-            Some(self.start)
-        } else if t >= 1.0 {
-            Some(self.end)
-        } else {
-            Some(self.start + (self.end - self.start) * t)
+        match t {
+            val if !(0.0..=1.0).contains(&val) => None,
+            _ => {
+                let t = self.scaled_t(t);
+                Some(self.start.lerp(self.end, t))
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use approx::assert_relative_eq;
+
     use crate::math::almost_eq;
 
     use super::*;
 
     #[test]
-    fn test_lerp_t_returns_start_and_end_interpolated_by_t() {
+    fn test_scaled_t_returns_correct_t() {
+        let l = Lerp::new(DVec3::ZERO, DVec3::ONE);
+        assert_relative_eq!(l.scaled_t(0.0), 0.0);
+        assert_relative_eq!(l.scaled_t(0.5), 0.5);
+        assert_relative_eq!(l.scaled_t(1.0), 1.0);
+
+        let early_l = Lerp::end_early(DVec3::ZERO, DVec3::ONE, 0.8);
+        assert_relative_eq!(early_l.scaled_t(0.0), 0.0);
+        assert_relative_eq!(early_l.scaled_t(0.4), 0.5);
+        assert_relative_eq!(early_l.scaled_t(0.8), 1.0);
+        assert_relative_eq!(early_l.scaled_t(1.0), 1.0);
+
+        let late_l = Lerp::start_late(DVec3::ZERO, DVec3::ONE, 0.2);
+        assert_relative_eq!(late_l.scaled_t(0.0), 0.0);
+        assert_relative_eq!(late_l.scaled_t(0.2), 0.0);
+        assert_relative_eq!(late_l.scaled_t(0.6), 0.5);
+        assert_relative_eq!(late_l.scaled_t(1.0), 1.0);
+    }
+
+    #[test]
+    fn test_scaled_t_clamps_to_zero_one() {
+        let l = Lerp::new(DVec3::ZERO, DVec3::ONE);
+        assert_relative_eq!(l.scaled_t(-0.5), 0.0);
+        assert_relative_eq!(l.scaled_t(1.5), 1.0);
+    }
+
+    #[test]
+    fn test_at_invalid_t_returns_none() {
+        let l = Lerp::new(DVec3::ZERO, DVec3::ONE);
+        assert!(l.at(-0.5).is_none());
+        assert!(l.at(1.5).is_none());
+    }
+
+    #[test]
+    fn test_lerp_valid_t_returns_start_and_end_interpolated_by_t() {
         let l = Lerp::new(DVec3::ZERO, DVec3::ONE);
         assert!(almost_eq(l.at(0.0).unwrap(), DVec3::ZERO));
         assert!(almost_eq(l.at(0.5).unwrap(), DVec3::splat(0.5)));
@@ -76,70 +115,58 @@ mod tests {
     }
 
     #[test]
-    fn test_lerp_negative_t_returns_start() {
+    fn test_lerp_invalid_t_returns_none() {
         let l = Lerp::new(DVec3::ZERO, DVec3::ONE);
-        assert!(almost_eq(l.at(-0.5).unwrap(), DVec3::ZERO));
+        assert!(l.at(-0.5).is_none());
+        assert!(l.at(1.5).is_none());
     }
 
     #[test]
-    fn test_lerp_t_greater_than_one_returns_end() {
-        let l = Lerp::new(DVec3::ZERO, DVec3::ONE);
-        assert!(almost_eq(l.at(1.5).unwrap(), DVec3::ONE));
-    }
-
-    #[test]
-    fn test_hold_t_returns_start_regardless_of_value() {
+    fn test_hold_valid_t_returns_start_regardless_of_value() {
         let l = Lerp::hold(DVec3::ZERO);
-        assert!(almost_eq(l.at(-0.5).unwrap(), DVec3::ZERO));
         assert!(almost_eq(l.at(0.0).unwrap(), DVec3::ZERO));
         assert!(almost_eq(l.at(0.5).unwrap(), DVec3::ZERO));
         assert!(almost_eq(l.at(1.0).unwrap(), DVec3::ZERO));
-        assert!(almost_eq(l.at(1.5).unwrap(), DVec3::ZERO));
     }
 
     #[test]
-    fn test_end_early_returns_start_and_end_interpolated_by_scaled_t() {
+    fn test_hold_invalid_t_returns_none() {
+        let l = Lerp::hold(DVec3::ZERO);
+        assert!(l.at(-0.5).is_none());
+        assert!(l.at(1.5).is_none());
+    }
+
+    #[test]
+    fn test_end_early_valid_t_returns_start_and_end_interpolated_by_scaled_t() {
         let l = Lerp::end_early(DVec3::ZERO, DVec3::ONE, 0.8);
         assert!(almost_eq(l.at(0.0).unwrap(), DVec3::ZERO));
         assert!(almost_eq(l.at(0.4).unwrap(), DVec3::splat(0.5)));
         assert!(almost_eq(l.at(0.8).unwrap(), DVec3::ONE));
-    }
-
-    #[test]
-    fn test_end_early_negative_t_returns_start() {
-        let l = Lerp::end_early(DVec3::ZERO, DVec3::ONE, 0.8);
-        assert!(almost_eq(l.at(-0.5).unwrap(), DVec3::ZERO));
-    }
-
-    #[test]
-    fn test_end_early_t_greater_than_stop_time_returns_end() {
-        let l = Lerp::end_early(DVec3::ZERO, DVec3::ONE, 0.8);
         assert!(almost_eq(l.at(0.9).unwrap(), DVec3::ONE));
         assert!(almost_eq(l.at(1.0).unwrap(), DVec3::ONE));
-        assert!(almost_eq(l.at(1.1).unwrap(), DVec3::ONE));
     }
 
     #[test]
-    fn test_start_late_returns_start_and_end_interpolated_by_t_starting_from_start_time() {
+    fn test_end_early_invalid_t_returns_none() {
+        let l = Lerp::end_early(DVec3::ZERO, DVec3::ONE, 0.8);
+        assert!(l.at(-0.5).is_none());
+        assert!(l.at(1.5).is_none());
+    }
+
+    #[test]
+    fn test_start_late_valid_t_returns_start_and_end_interpolated_by_t_starting_from_start_time() {
         let l = Lerp::start_late(DVec3::ZERO, DVec3::ONE, 0.2);
         assert!(almost_eq(l.at(0.0).unwrap(), DVec3::ZERO));
+        assert!(almost_eq(l.at(0.1).unwrap(), DVec3::ZERO));
         assert!(almost_eq(l.at(0.2).unwrap(), DVec3::ZERO));
         assert!(almost_eq(l.at(0.6).unwrap(), DVec3::splat(0.5)));
         assert!(almost_eq(l.at(1.0).unwrap(), DVec3::ONE));
     }
 
     #[test]
-    fn test_start_late_t_less_than_start_time_returns_start() {
+    fn test_start_late_invalid_t_returns_none() {
         let l = Lerp::start_late(DVec3::ZERO, DVec3::ONE, 0.2);
-        assert!(almost_eq(l.at(-0.5).unwrap(), DVec3::ZERO));
-        assert!(almost_eq(l.at(0.0).unwrap(), DVec3::ZERO));
-        assert!(almost_eq(l.at(0.1).unwrap(), DVec3::ZERO));
-        assert!(almost_eq(l.at(0.2).unwrap(), DVec3::ZERO));
-    }
-
-    #[test]
-    fn test_start_late_t_greater_than_one_returns_start() {
-        let l = Lerp::start_late(DVec3::ZERO, DVec3::ONE, 0.2);
-        assert!(almost_eq(l.at(1.1).unwrap(), DVec3::ONE));
+        assert!(l.at(-0.5).is_none());
+        assert!(l.at(1.5).is_none());
     }
 }

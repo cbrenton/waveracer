@@ -1,6 +1,7 @@
 use glam::DVec3;
 use rt2::render::CameraState;
 use rt2::render::Film;
+use rt2::render::LerpTransition;
 use rt2::render::MonteCarloRenderer;
 use rt2::render::MultiFilePngWriter;
 use rt2::render::VideoCamera;
@@ -16,7 +17,7 @@ fn main() {
         samples_per_pixel: 10,
     };
 
-    let camera = VideoCamera::new(90.0, renderer, film);
+    let mut camera = VideoCamera::new(90.0, renderer, film);
     let image_writer = MultiFilePngWriter::new("./output", "frame_{{frame_number}}");
 
     let camera_pos = DVec3::new(0.0, 0.0, 3.0);
@@ -28,6 +29,9 @@ fn main() {
         up: camera_up,
     };
 
-    let frame = camera.render_frame(&scene.world, &state, 0);
-    image_writer.write(frame);
+    camera.add_transition(LerpTransition::new(&state, &state, 2));
+
+    for frame in camera.render_frames(&scene.world) {
+        image_writer.write(frame);
+    }
 }

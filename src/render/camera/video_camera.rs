@@ -36,7 +36,16 @@ impl<T: Renderer> VideoCamera<T> {
         self.transitions.push_back(transition);
     }
 
-    pub fn render_frame(
+    pub fn render_frames(&self, world: &[Hittable]) -> impl Iterator<Item = FrameData> {
+        self.transitions
+            .clone()
+            .into_iter()
+            .flatten()
+            .enumerate()
+            .map(move |(frame, s)| self.render_frame(world, &s, frame))
+    }
+
+    fn render_frame(
         &self,
         world: &[Hittable],
         camera_state: &CameraState,

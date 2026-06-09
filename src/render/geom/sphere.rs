@@ -69,8 +69,6 @@ impl Sphere {
         let d = (rec.point - self.center).normalize();
         rec.u = 0.5 + (-d.z).atan2(d.x) / (2.0 * PI);
         rec.v = 0.5 + d.y.asin() / (PI);
-        dbg!(rec.point);
-        dbg!(self.center);
         let outward_normal = (rec.point - self.center) / self.radius;
         rec.set_face_normal(ray, outward_normal);
         rec.mat = self.mat.clone();

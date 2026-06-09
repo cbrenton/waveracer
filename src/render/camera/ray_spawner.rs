@@ -2,7 +2,7 @@ use glam::DVec3;
 
 use crate::{
     math::{Ray, random::random_in_unit_disk},
-    render::{CameraState, VideoCamera},
+    render::{CameraState, Renderer, VideoCamera},
 };
 
 #[derive(Debug)]
@@ -17,7 +17,7 @@ pub struct RaySpawner {
 }
 
 impl RaySpawner {
-    pub fn new(camera: &VideoCamera, state: &CameraState) -> Self {
+    pub fn new<T: Renderer>(camera: &VideoCamera<T>, state: &CameraState) -> Self {
         // let image_h: f64 = (self.width as f64 / (16.0 / 9.0)).max(1.0);
         let camera_center = state.pos;
 

@@ -8,22 +8,20 @@ use crate::{
         Color,
         random::{random_double, random_in_unit_disk},
     },
-    render::{
-        CameraState, DummyRenderer, Film, FrameData, Hittable, LerpTransition, RaySpawner, Renderer,
-    },
+    render::{CameraState, Film, FrameData, Hittable, LerpTransition, RaySpawner, Renderer},
 };
 
-pub struct VideoCamera {
+pub struct VideoCamera<T> {
     pub vfov: f64,
-    renderer: DummyRenderer,
+    renderer: T,
     transitions: LinkedList<LerpTransition>,
     pub cur_frame: i32,
     pub total_frames: i32,
     pub film: Film,
 }
 
-impl VideoCamera {
-    pub fn new(vfov: f64, renderer: DummyRenderer, film: Film) -> Self {
+impl<T: Renderer> VideoCamera<T> {
+    pub fn new(vfov: f64, renderer: T, film: Film) -> Self {
         Self {
             vfov,
             renderer,

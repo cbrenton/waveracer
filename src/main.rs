@@ -1,7 +1,7 @@
 use glam::DVec3;
 use rt2::render::CameraState;
-use rt2::render::DummyRenderer;
 use rt2::render::Film;
+use rt2::render::MonteCarloRenderer;
 use rt2::render::MultiFilePngWriter;
 use rt2::render::VideoCamera;
 use rt2::scene::sample_scene;
@@ -9,7 +9,7 @@ use rt2::scene::sample_scene;
 fn main() {
     let scene = sample_scene();
 
-    let renderer = DummyRenderer {};
+    let renderer = MonteCarloRenderer { max_depth: 10 };
     let film = Film {
         width: 1000,
         height: 600,

@@ -1,6 +1,8 @@
 mod dummy_renderer;
+mod monte_carlo_renderer;
 
 pub use dummy_renderer::DummyRenderer;
+pub use monte_carlo_renderer::MonteCarloRenderer;
 
 use mockall::automock;
 

@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use image::{Rgb, RgbImage};
+use image::{ImageError, Rgb, RgbImage};
 
 use crate::{
     math::{Color, IInterval, linear_to_gamma},
@@ -24,12 +24,12 @@ impl MultiFilePngWriter {
         }
     }
 
-    pub fn write(&self, frame: FrameData) {
+    pub fn write(&self, frame: &FrameData) -> Result<(), ImageError> {
         let mut buf = RgbImage::new(frame.w as u32, frame.h as u32);
         for y in 0..frame.h {
             for x in 0..frame.w {
                 let pixel = buf.get_pixel_mut(x as u32, y as u32);
-                *pixel = self.convert_pixel(frame.pixels[(y * frame.w + x) as usize]);
+                *pixel = self.convert_pixel(frame.pixels[y * frame.w + x]);
             }
         }
 
@@ -43,10 +43,7 @@ impl MultiFilePngWriter {
         output.set_extension("png");
 
         // write image
-        match buf.save(output.clone()) {
-            Ok(_) => println!("Wrote file to {:?}", output),
-            Err(err) => println!("Error while writing image: {}", err),
-        }
+        buf.save(output.clone())
     }
 
     fn convert_pixel(&self, pixel: Color) -> Rgb<u8> {
@@ -58,7 +55,7 @@ impl MultiFilePngWriter {
         Rgb([r, g, b])
     }
 
-    fn output_filename(&self, frame: FrameData) -> String {
+    fn output_filename(&self, frame: &FrameData) -> String {
         self.filename_template
             .replace("{{frame_number}}", frame.frame_number.to_string().as_str())
     }
@@ -91,7 +88,7 @@ mod tests {
         );
 
         let frame = dummy_frame(0);
-        w.write(frame);
+        w.write(&frame).unwrap();
 
         assert!(tmp.path().join("output/frame_0.png").is_file());
     }
@@ -107,7 +104,7 @@ mod tests {
         );
 
         let frame = dummy_frame(0);
-        w.write(frame);
+        w.write(&frame).unwrap();
 
         assert!(tmp.path().join("output/frame_0.png").is_file());
     }
@@ -123,7 +120,7 @@ mod tests {
         );
 
         let frame = dummy_frame(0);
-        w.write(frame);
+        w.write(&frame).unwrap();
 
         assert!(tmp.path().join("output/").is_dir());
     }
@@ -138,8 +135,8 @@ mod tests {
             "frame_{{frame_number}}",
         );
 
-        w.write(dummy_frame(0));
-        w.write(dummy_frame(1));
+        w.write(&dummy_frame(0)).unwrap();
+        w.write(&dummy_frame(1)).unwrap();
 
         assert!(tmp.path().join("output/frame_0.png").is_file());
         assert!(tmp.path().join("output/frame_1.png").is_file());
@@ -150,9 +147,9 @@ mod tests {
         let w = MultiFilePngWriter::new("./output", "frame_{{frame_number}}");
 
         let frame = dummy_frame(0);
-        assert_eq!(w.output_filename(frame), "frame_0");
+        assert_eq!(w.output_filename(&frame), "frame_0");
         let frame1 = dummy_frame(1);
-        assert_eq!(w.output_filename(frame1), "frame_1");
+        assert_eq!(w.output_filename(&frame1), "frame_1");
     }
 
     #[test]

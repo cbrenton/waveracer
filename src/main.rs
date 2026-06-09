@@ -31,7 +31,10 @@ fn main() {
 
     camera.add_transition(LerpTransition::new(&state, &state, 2));
 
+    let mut errs = vec![];
     for frame in camera.render_frames(&scene.world) {
-        image_writer.write(frame);
+        if let Err(val) = image_writer.write(&frame) {
+            errs.push(format!("frame {}: {}", frame.frame_number, val));
+        }
     }
 }

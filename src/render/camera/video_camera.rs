@@ -1,26 +1,36 @@
 use std::{collections::LinkedList, mem::take};
 
-use crate::render::{CameraState, DummyRenderer, FrameData, Hittable, LerpTransition};
+use glam::DVec3;
+use kdam::{BarExt, tqdm};
+
+use crate::{
+    math::{
+        Color,
+        random::{random_double, random_in_unit_disk},
+    },
+    render::{
+        CameraState, DummyRenderer, Film, FrameData, Hittable, LerpTransition, RaySpawner, Renderer,
+    },
+};
 
 pub struct VideoCamera {
-    vfov: f64,
+    pub vfov: f64,
     renderer: DummyRenderer,
     transitions: LinkedList<LerpTransition>,
     pub cur_frame: i32,
     pub total_frames: i32,
-    // TODO: this is gnarly. I should ask somebody if there's a better way
-    trans_iterator: Option<Box<dyn Iterator<Item = CameraState>>>,
+    pub film: Film,
 }
 
 impl VideoCamera {
-    pub fn new(vfov: f64, renderer: DummyRenderer) -> Self {
+    pub fn new(vfov: f64, renderer: DummyRenderer, film: Film) -> Self {
         Self {
             vfov,
             renderer,
             transitions: LinkedList::new(),
             cur_frame: 0,
             total_frames: 20,
-            trans_iterator: None,
+            film,
         }
     }
 
@@ -28,41 +38,51 @@ impl VideoCamera {
         self.transitions.push_back(transition);
     }
 
-    pub fn capture_frame(&mut self, world: &[Hittable]) -> Option<FrameData> {
-        if !self.is_rolling() {
-            // TODO: improve this
-            panic!("camera isn't rolling");
+    pub fn render_frame(
+        &self,
+        world: &[Hittable],
+        camera_state: &CameraState,
+        frame_number: usize,
+    ) -> FrameData {
+        let mut pixels: Vec<Color> = vec![];
+
+        let ray_spawner = RaySpawner::new(self, camera_state);
+
+        let mut bar = tqdm!(
+            total = self.film.width * self.film.height,
+            position = 1,
+            desc = "  frame"
+        );
+        for y in 0..self.film.height {
+            for x in 0..self.film.width {
+                let mut pixel_color = Color::ZERO;
+
+                // cast SAMPLES_PER_PIXEL random-ish rays and then divide total color by
+                // SAMPLES_PER_PIXEL for simple antialiasing
+                for _ in 0..self.film.samples_per_pixel {
+                    let offset = self.sample_square();
+
+                    let ray = ray_spawner.generate_primary_ray(x, y, offset);
+
+                    pixel_color += self.renderer.ray_color(&ray, world, 0);
+                }
+                // NOTE: I chose to not include samples in my progress bar for the sake of having a
+                // semi-readable number
+                bar.update(1).unwrap();
+                pixels.push(pixel_color / self.film.samples_per_pixel as f64);
+            }
         }
-        let pixels = self.renderer.render(world);
-        let state = self.trans_iterator.as_mut().and_then(Iterator::next);
-        // TODO: so gross. make this better
-        if state.is_none() {
-            self.trans_iterator = None;
-            return None;
-        }
-        dbg!(state);
-        let result = FrameData {
-            w: 1,
-            h: 1,
+
+        FrameData {
+            w: self.film.width,
+            h: self.film.height,
             pixels,
-            frame_number: self.cur_frame,
+            frame_number,
             t: 0.0,
-        };
-        self.cur_frame += 1;
-        Some(result)
+        }
     }
 
-    pub fn roll(&mut self) {
-        // self.renderer.prebake();
-
-        // use std::mem::take to take ownership of the transitions field of a mutable struct
-        let transitions = take(&mut self.transitions);
-        // sigh...OPTION of FAT POINTER of something that IMPLEMENTS iterator OVER camerastate
-        self.trans_iterator = Some(Box::new(transitions.into_iter().flatten()));
-    }
-
-    pub fn is_rolling(&self) -> bool {
-        // TODO: I don't think this is correct
-        self.trans_iterator.is_some() // self.cur_frame <= self.total_frames
+    fn sample_square(&self) -> DVec3 {
+        DVec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
     }
 }

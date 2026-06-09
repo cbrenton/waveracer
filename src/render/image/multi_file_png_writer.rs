@@ -70,7 +70,7 @@ impl MultiFilePngWriter {
 mod tests {
     use super::*;
 
-    fn dummy_frame(frame_number: i32) -> FrameData {
+    fn dummy_frame(frame_number: usize) -> FrameData {
         FrameData {
             w: 1,
             h: 1,

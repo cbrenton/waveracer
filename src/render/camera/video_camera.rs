@@ -5,34 +5,44 @@ use kdam::{BarExt, tqdm};
 
 use crate::{
     math::{
-        Color,
+        Color, Lerp,
         random::{random_double, random_in_unit_disk},
     },
-    render::{CameraState, Film, FrameData, Hittable, LerpTransition, RaySpawner, Renderer},
+    render::{CameraState, CameraTransition, Film, FrameData, Hittable, RaySpawner, Renderer},
 };
 
 pub struct VideoCamera<T> {
     pub vfov: f64,
     renderer: T,
-    transitions: LinkedList<LerpTransition>,
+    transitions: LinkedList<CameraTransition>,
     pub cur_frame: i32,
-    pub total_frames: i32,
+    pub total_frames: usize,
     pub film: Film,
 }
 
 impl<T: Renderer> VideoCamera<T> {
-    pub fn new(vfov: f64, renderer: T, film: Film) -> Self {
+    pub fn new(initial_state: &CameraState, vfov: f64, renderer: T, film: Film) -> Self {
+        // Create default single-frame hold
+        let mut transitions = LinkedList::new();
+        transitions.push_back(CameraTransition::new(
+            Lerp::hold(initial_state.pos),
+            Lerp::hold(initial_state.look_at),
+            Lerp::hold(initial_state.up),
+            1,
+        ));
+
         Self {
             vfov,
             renderer,
-            transitions: LinkedList::new(),
+            transitions,
             cur_frame: 0,
-            total_frames: 20,
+            total_frames: 1,
             film,
         }
     }
 
-    pub fn add_transition(&mut self, transition: LerpTransition) {
+    pub fn add_transition(&mut self, transition: CameraTransition) {
+        self.total_frames += transition.len();
         self.transitions.push_back(transition);
     }
 
@@ -91,5 +101,36 @@ impl<T: Renderer> VideoCamera<T> {
 
     fn sample_square(&self) -> DVec3 {
         DVec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{math::Lerp, render::MockRenderer};
+
+    use super::*;
+
+    #[test]
+    fn test_add_transition_updates_total_frames() {
+        let mut c = VideoCamera::new(
+            &CameraState::default(),
+            90.0,
+            MockRenderer::new(),
+            Film {
+                width: 1,
+                height: 1,
+                samples_per_pixel: 1,
+            },
+        );
+        assert_eq!(c.total_frames, 1);
+
+        let t = CameraTransition::new(
+            Lerp::hold(DVec3::ZERO),
+            Lerp::hold(DVec3::ZERO),
+            Lerp::hold(DVec3::ZERO),
+            2,
+        );
+        c.add_transition(t);
+        assert_eq!(c.total_frames, 3);
     }
 }

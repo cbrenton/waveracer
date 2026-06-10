@@ -29,7 +29,6 @@ impl Renderer for MonteCarloRenderer {
         }
 
         if let Some(rec) = result {
-            // Color::new(1.0, 0.0, 0.0)
             let color_from_emission = rec.mat.emitted(rec.u, rec.v, rec.point);
             if let Some(scatter) = rec.mat.scatter(ray, &rec) {
                 let color_from_scatter =

@@ -92,7 +92,7 @@ mod tests {
         let frame = dummy_frame(0);
         w.write(&frame).unwrap();
 
-        assert!(tmp.path().join("output/frame_0.png").is_file());
+        assert!(tmp.path().join("output/frame_000000000.png").is_file());
     }
 
     #[test]
@@ -108,7 +108,7 @@ mod tests {
         let frame = dummy_frame(0);
         w.write(&frame).unwrap();
 
-        assert!(tmp.path().join("output/frame_0.png").is_file());
+        assert!(tmp.path().join("output/frame_000000000.png").is_file());
     }
 
     #[test]
@@ -140,8 +140,8 @@ mod tests {
         w.write(&dummy_frame(0)).unwrap();
         w.write(&dummy_frame(1)).unwrap();
 
-        assert!(tmp.path().join("output/frame_0.png").is_file());
-        assert!(tmp.path().join("output/frame_1.png").is_file());
+        assert!(tmp.path().join("output/frame_000000000.png").is_file());
+        assert!(tmp.path().join("output/frame_000000001.png").is_file());
     }
 
     #[test]
@@ -149,9 +149,9 @@ mod tests {
         let w = MultiFilePngWriter::new("./output", "frame_{{frame_number}}");
 
         let frame = dummy_frame(0);
-        assert_eq!(w.output_filename(&frame), "frame_0");
+        assert_eq!(w.output_filename(&frame), "frame_000000000");
         let frame1 = dummy_frame(1);
-        assert_eq!(w.output_filename(&frame1), "frame_1");
+        assert_eq!(w.output_filename(&frame1), "frame_000000001");
     }
 
     #[test]

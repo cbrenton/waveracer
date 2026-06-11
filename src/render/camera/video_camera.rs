@@ -6,7 +6,7 @@ use kdam::{BarExt, tqdm};
 use crate::{
     math::{
         Color, Lerp,
-        random::{random_double, random_in_unit_disk},
+        random::{random_double, random_in_unit_disk, random_in_xy_unit_square},
     },
     render::{CameraState, CameraTransition, Film, FrameData, Hittable, RaySpawner, Renderer},
 };
@@ -88,7 +88,7 @@ impl<T: Renderer> VideoCamera<T> {
                 // cast SAMPLES_PER_PIXEL random-ish rays and then divide total color by
                 // SAMPLES_PER_PIXEL for simple antialiasing
                 for _ in 0..self.film.samples_per_pixel {
-                    let offset = self.sample_square();
+                    let offset = random_in_xy_unit_square();
 
                     let ray = ray_spawner.generate_primary_ray(x, y, offset);
 
@@ -108,10 +108,6 @@ impl<T: Renderer> VideoCamera<T> {
             frame_number,
             t: 0.0,
         }
-    }
-
-    fn sample_square(&self) -> DVec3 {
-        DVec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
     }
 }
 

@@ -23,7 +23,6 @@ pub fn random_vec3_range(range: Range<f64>) -> DVec3 {
     DVec3::new(
         random_double_range(range.clone()),
         random_double_range(range.clone()),
-        // don't need to clone it the last time since it won't be used again, so can be consumed here
         random_double_range(range),
     )
 }
@@ -64,4 +63,7 @@ pub fn random_in_unit_disk() -> DVec3 {
     }
 }
 
-
+/// Sample in a unit XY square around the origin
+pub fn random_in_xy_unit_square() -> DVec3 {
+    DVec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
+}

@@ -101,7 +101,7 @@ pub fn sample_scene<T: Renderer>(renderer: T, film: Film) -> SceneData<T> {
         look_at: DVec3::new(0.0, 0.0, -1.0),
         up: DVec3::new(0.0, 1.0, 0.0),
     };
-    let mut camera = VideoCamera::new(&start, 90.0, renderer, film);
+    let mut camera = VideoCamera::new(&start, 90.0, 1.0, 1.4, renderer, film);
     animate_camera(&mut camera, &start);
 
     SceneData {

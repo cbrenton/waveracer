@@ -12,6 +12,7 @@ pub struct RaySpawner {
     pub pixel_delta_v: DVec3,
     pub camera_center: DVec3,
     pub camera_defocus_angle: f64,
+    pub camera_focus_distance: f64,
     pub defocus_disk_u: DVec3,
     pub defocus_disk_v: DVec3,
 }
@@ -24,12 +25,10 @@ impl RaySpawner {
         let theta = camera.vfov.to_radians();
         let h = (theta / 2.0).tan();
 
-        // TODO: fix (put in config)
-        let focus_distance = 1.4;
-        // TODO: fix (put in config)
-        let defocus_angle: f64 = 1.4;
+        let camera_focus_distance = camera.focus_distance;
+        let camera_defocus_angle: f64 = camera.defocus_angle;
 
-        let viewport_height = 2.0 * h * focus_distance;
+        let viewport_height = 2.0 * h * camera_focus_distance;
         // recalculate aspect ratio because image_h might not be what we intended
         let viewport_width =
             viewport_height * (camera.film.width as f64 / camera.film.height as f64);
@@ -49,18 +48,19 @@ impl RaySpawner {
 
         // calculate the location of the upper left pixel
         let viewport_upper_left =
-            camera_center - (focus_distance * w) - viewport_u / 2.0 - viewport_v / 2.0;
+            camera_center - (camera_focus_distance * w) - viewport_u / 2.0 - viewport_v / 2.0;
 
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-        // dbg!(pixel00_loc);
 
-        let defocus_radius = focus_distance * (defocus_angle / 2.0).to_radians().tan();
+        let defocus_radius =
+            camera_focus_distance * (camera_defocus_angle / 2.0).to_radians().tan();
         let defocus_disk_u = u * defocus_radius;
         let defocus_disk_v = v * defocus_radius;
 
         Self {
             camera_center,
-            camera_defocus_angle: defocus_angle,
+            camera_defocus_angle,
+            camera_focus_distance,
             pixel00_loc,
             pixel_delta_u,
             pixel_delta_v,

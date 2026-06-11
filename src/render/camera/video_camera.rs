@@ -18,10 +18,19 @@ pub struct VideoCamera<T> {
     pub cur_frame: i32,
     pub total_frames: usize,
     pub film: Film,
+    pub focus_distance: f64,
+    pub defocus_angle: f64,
 }
 
 impl<T: Renderer> VideoCamera<T> {
-    pub fn new(initial_state: &CameraState, vfov: f64, renderer: T, film: Film) -> Self {
+    pub fn new(
+        initial_state: &CameraState,
+        vfov: f64,
+        focus_distance: f64,
+        defocus_angle: f64,
+        renderer: T,
+        film: Film,
+    ) -> Self {
         // Create default single-frame hold
         let mut transitions = LinkedList::new();
         transitions.push_back(CameraTransition::new(
@@ -37,6 +46,8 @@ impl<T: Renderer> VideoCamera<T> {
             transitions,
             cur_frame: 0,
             total_frames: 1,
+            focus_distance,
+            defocus_angle,
             film,
         }
     }
@@ -115,6 +126,8 @@ mod tests {
         let mut c = VideoCamera::new(
             &CameraState::default(),
             90.0,
+            1.0,
+            1.0,
             MockRenderer::new(),
             Film {
                 width: 1,

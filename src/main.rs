@@ -1,6 +1,9 @@
+use std::f64::consts::PI;
+
 use glam::DVec3;
 use kdam::{BarExt, tqdm};
 use rt2::math::Lerp;
+use rt2::math::Rotate;
 use rt2::render::CameraState;
 use rt2::render::CameraTransition;
 use rt2::render::Film;
@@ -50,6 +53,9 @@ fn main() {
         up_hold.clone(),
         100,
     ));
+
+    let rot = Rotate::end_early(start.pos, start.look_at, 2.0 * PI, 0.5, true);
+    camera.add_transition(CameraTransition::new(rot, look_at_hold, up_hold, 100));
 
     let image_writer = MultiFilePngWriter::new("./output", "frame_{{frame_number}}");
 

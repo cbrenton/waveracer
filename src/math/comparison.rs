@@ -14,3 +14,19 @@ pub fn near_zero(v: DVec3) -> bool {
 pub fn almost_eq(lhs: DVec3, rhs: DVec3) -> bool {
     lhs.abs_diff_eq(rhs, ALMOST_ZERO)
 }
+
+#[macro_export]
+macro_rules! assert_vec_almost_eq {
+    ($left:expr, $right:expr $(,)?) => {
+        match (&$left, &$right) {
+            (left_val, right_val) => {
+                if !(left_val.abs_diff_eq(*right_val, 1e-6)) {
+                    panic!(
+                        "vector comparison failed\n  left: {:?}\n right: {:?}",
+                        left_val, right_val
+                    )
+                }
+            }
+        }
+    };
+}

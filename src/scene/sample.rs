@@ -1,22 +1,46 @@
-use std::sync::Arc;
+use std::{f64::consts::PI, sync::Arc};
 
 use glam::{DVec3, IVec3};
 
 use crate::{
-    math::Color,
+    math::{Color, Lerp, Rotate},
     render::{
-        CheckerTexture, Dielectric, DiffuseLight, Hittable, Lambertian, SolidColor, Sphere,
-        Triangle, TriangleMesh,
+        CameraState, CameraTransition, CheckerTexture, Dielectric, DiffuseLight, Film, Hittable,
+        Lambertian, Renderer, SolidColor, Sphere, Triangle, TriangleMesh, VideoCamera,
     },
+    scene::SceneData,
 };
 
-pub struct SceneData {
-    pub world: Vec<Hittable>,
-    pub name: String,
-    // TODO: add accel structure here maybe?
+fn animate_camera<T: Renderer>(camera: &mut VideoCamera<T>, start: &CameraState) {
+    let end = CameraState {
+        pos: DVec3::new(0.0, 0.0, 0.5),
+        look_at: DVec3::new(0.0, 0.0, -1.0),
+        up: DVec3::new(0.0, 1.0, 0.0),
+    };
+
+    let look_at_hold = Lerp::hold(start.look_at);
+    let up_hold = Lerp::hold(start.up);
+    let zoom_in_slerp = Lerp::end_early(start.pos, end.pos, 0.8, true);
+    camera.add_transition(CameraTransition::new(
+        zoom_in_slerp,
+        look_at_hold.clone(),
+        up_hold.clone(),
+        100,
+    ));
+
+    let zoom_out_slerp = Lerp::new(end.pos, start.pos, true);
+    camera.add_transition(CameraTransition::new(
+        zoom_out_slerp,
+        look_at_hold.clone(),
+        up_hold.clone(),
+        100,
+    ));
+
+    let rot = Rotate::end_early(start.pos, start.look_at, 2.0 * PI, 0.5, true);
+    camera.add_transition(CameraTransition::new(rot, look_at_hold, up_hold, 100));
 }
 
-pub fn sample_scene() -> SceneData {
+pub fn sample_scene<T: Renderer>(renderer: T, film: Film) -> SceneData<T> {
     let mut world: Vec<Hittable> = vec![];
 
     let material_center = Arc::new(Lambertian::from_color(Color::new(0.1, 0.2, 0.5)));
@@ -72,8 +96,17 @@ pub fn sample_scene() -> SceneData {
     world.push(Hittable::Triangle(plane_left));
     world.push(Hittable::Triangle(plane_right));
 
+    let start = CameraState {
+        pos: DVec3::new(0.0, 0.0, 3.0),
+        look_at: DVec3::new(0.0, 0.0, -1.0),
+        up: DVec3::new(0.0, 1.0, 0.0),
+    };
+    let mut camera = VideoCamera::new(&start, 90.0, renderer, film);
+    animate_camera(&mut camera, &start);
+
     SceneData {
         world,
         name: String::from("sample"),
+        camera,
     }
 }

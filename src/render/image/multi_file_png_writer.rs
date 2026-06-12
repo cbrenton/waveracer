@@ -171,4 +171,13 @@ mod tests {
         let color = w.convert_pixel(pixel);
         assert_eq!(color, Rgb([255, 255, 255]));
     }
+
+    #[test]
+    fn test_convert_pixel_ultra_white_scales_to_255_255_255() {
+        let w = MultiFilePngWriter::new("output", "frame_{{frame_number}}");
+
+        let pixel = Color::splat(10.0);
+        let color = w.convert_pixel(pixel);
+        assert_eq!(color, Rgb([255, 255, 255]));
+    }
 }

@@ -2,22 +2,22 @@ use kdam::{BarExt, tqdm};
 use rt2::render::Film;
 use rt2::render::MonteCarloRenderer;
 use rt2::render::MultiFilePngWriter;
-use rt2::scene::sample_scene;
+use rt2::scene::bunny;
 
 fn main() {
-    // 100 for 1000x600 image
-    let scale = 100;
+    let render_w = 1000.0;
+    let aspect_ratio = 0.6;
 
     let renderer = MonteCarloRenderer { max_depth: 10 };
     let film = Film {
-        width: 10 * scale,
-        height: 6 * scale,
-        samples_per_pixel: 10,
+        width: render_w as usize,
+        height: (aspect_ratio * render_w) as usize,
+        samples_per_pixel: 100,
     };
 
     let image_writer = MultiFilePngWriter::new("./output", "frame_{{frame_number}}");
 
-    let scene = sample_scene(renderer, film);
+    let scene = bunny(renderer, film);
 
     let mut progress = tqdm!(total = scene.camera.total_frames);
     progress.refresh().unwrap();

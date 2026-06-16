@@ -21,4 +21,6 @@ target
 #.idea/
 
 output
+archive
 *.mp4
+*.png

@@ -26,7 +26,7 @@ impl Bounds3 {
             panic!("can't create an infinite AABB. use UNIVERSE instead");
         }
         if min.cmpgt(max).any() {
-            panic!("can't create a negative sized AABB");
+            panic!("can't create a negative sized AABB. use EMPTY instead");
         }
         let centroid = min + (max - min) / 2.0;
         Self { min, max, centroid }
@@ -168,6 +168,12 @@ mod tests {
         let result = Bounds3::combined(&Bounds3::EMPTY, &Bounds3::UNIVERSE);
         assert_eq!(result.min, Bounds3::UNIVERSE.min);
         assert_eq!(result.max, Bounds3::UNIVERSE.max);
+    }
+
+    #[test]
+    #[should_panic = "can't create a negative sized AABB"]
+    fn test_combined_with_empty_and_empty_panics() {
+        Bounds3::combined(&Bounds3::EMPTY, &Bounds3::EMPTY);
     }
 
     #[test]

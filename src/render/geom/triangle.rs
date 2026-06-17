@@ -140,9 +140,9 @@ mod tests {
         let b = DVec3::new(1.0, 0.0, 0.0);
         let c = DVec3::new(0.5, 1.0, 0.0);
         let tri = Triangle::new(a, b, c, null_material_ptr());
-        let ray = Ray::new(DVec3::new(0.5, 0.5, 1.0), DVec3::new(0.0, 0.0, 1.0));
+        let ray = Ray::new(DVec3::new(0.5, 0.5, -1.0), DVec3::new(0.0, 0.0, 1.0));
         let record = tri.hit(&ray, DInterval::UNIVERSE).unwrap();
-        assert_eq!(record.t, -1.0);
+        assert_eq!(record.t, 1.0);
         assert_eq!(record.point, DVec3::new(0.5, 0.5, 0.0));
         assert_eq!(record.normal, DVec3::new(0.0, 0.0, -1.0));
         assert!(!record.is_front_face);

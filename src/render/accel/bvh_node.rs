@@ -17,8 +17,7 @@ impl BVHNode {
     pub fn new(world: &mut [SomeHittable]) -> Self {
         let children: Vec<SomeHittable> = match world.len() {
             0 => vec![],
-            1 => vec![world[0].clone()],
-            2 => vec![world[0].clone(), world[1].clone()],
+            1..=2 => world.to_vec(),
             3.. => {
                 let mid = world.len() / 2;
                 let axis = rand::rng().random_range(0..=2);

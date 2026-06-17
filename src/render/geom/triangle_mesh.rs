@@ -16,6 +16,7 @@ use super::HitRecord;
 pub struct TriangleMesh {
     vertices: Vec<DVec3>,
     triangles: Vec<IVec3>,
+    // TODO: probably refactor this so that it can be accelerated on a per-triangle basis
     cache: Vec<SomeHittable>,
     aabb: Bounds3,
 }

@@ -7,7 +7,7 @@ use glam::{DVec3, IVec3};
 
 use crate::{
     math::{ALMOST_ZERO, Bounds3, DInterval, Ray},
-    render::{Hittable, Material, Triangle},
+    render::{Hittable, Material, SomeHittable, Triangle},
 };
 
 use super::HitRecord;
@@ -16,7 +16,7 @@ use super::HitRecord;
 pub struct TriangleMesh {
     vertices: Vec<DVec3>,
     triangles: Vec<IVec3>,
-    cache: Vec<Triangle>,
+    cache: Vec<SomeHittable>,
     aabb: Bounds3,
 }
 
@@ -31,7 +31,7 @@ impl fmt::Debug for TriangleMesh {
 
 impl TriangleMesh {
     pub fn new(vertices: Vec<DVec3>, triangles: Vec<IVec3>, mat: Arc<dyn Material>) -> Self {
-        let mut cache: Vec<Triangle> = vec![];
+        let mut cache: Vec<SomeHittable> = vec![];
         for triangle in &triangles {
             let a = vertices[triangle.x as usize];
             let b = vertices[triangle.y as usize];
@@ -39,7 +39,7 @@ impl TriangleMesh {
             // will this take up unnecessary space? could it be denormalized?
             // TODO: revisit this if I get *really* nitpicky about performance
             let tri = Triangle::new(a, b, c, mat.clone());
-            cache.push(tri);
+            cache.push(Box::new(tri));
         }
         eprintln!("constructing TriangleMesh AABB");
         let aabb = Bounds3::new(

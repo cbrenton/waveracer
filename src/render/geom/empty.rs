@@ -3,7 +3,7 @@ use crate::{
     render::{HitRecord, Hittable},
 };
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Empty {}
 
 impl Hittable for Empty {
@@ -13,11 +13,5 @@ impl Hittable for Empty {
 
     fn aabb(&self) -> Bounds3 {
         Bounds3::EMPTY
-    }
-}
-
-impl Default for Empty {
-    fn default() -> Self {
-        Self {}
     }
 }

@@ -16,11 +16,10 @@ pub struct BVHNode {
 impl BVHNode {
     pub fn new(world: &mut [SomeHittable]) -> Self {
         let children: Vec<SomeHittable> = match world.len() {
-            0 => vec![],
-            1..=2 => world.to_vec(),
+            ..=2 => world.to_vec(),
             3.. => {
                 let mid = world.len() / 2;
-                let axis = rand::rng().random_range(0..=2);
+                let axis = rand::rng().random_range(..3);
                 world.sort_by(|x, y| {
                     x.aabb().centroid()[axis]
                         .partial_cmp(&y.aabb().centroid()[axis])
@@ -43,10 +42,7 @@ impl BVHNode {
 
 impl Default for BVHNode {
     fn default() -> Self {
-        Self {
-            children: vec![],
-            aabb: Bounds3::EMPTY,
-        }
+        Self::new(&mut [])
     }
 }
 
@@ -120,8 +116,8 @@ mod tests {
 
         assert!(node.hit(&ray, ray_t).is_some());
     }
-    #[test]
 
+    #[test]
     fn test_hit_single_element_node_with_nonintersecting_ray_returns_true() {
         let mut prim = MockHittable::new();
         prim.expect_clone().returning(|| {

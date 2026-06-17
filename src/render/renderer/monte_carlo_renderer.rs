@@ -3,7 +3,7 @@ use kdam::tqdm;
 
 use crate::{
     math::{ALMOST_ZERO, Color, DInterval, Ray},
-    render::{HitRecord, Hittable, Renderer},
+    render::{HitRecord, Renderer, SomeHittable},
 };
 
 #[derive(Debug)]
@@ -12,7 +12,7 @@ pub struct MonteCarloRenderer {
 }
 
 impl Renderer for MonteCarloRenderer {
-    fn ray_color(&self, ray: &Ray, world: &[Hittable], depth: i32) -> Color {
+    fn ray_color(&self, ray: &Ray, world: &[SomeHittable], depth: i32) -> Color {
         if depth >= self.max_depth {
             return DVec3::ZERO;
         }

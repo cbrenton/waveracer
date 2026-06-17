@@ -4,9 +4,10 @@ use glam::DVec3;
 
 use crate::{
     math::{ALMOST_ZERO, Bounds3, DInterval, Ray},
-    render::{HitRecord, Material},
+    render::{HitRecord, Hittable, Material},
 };
 
+#[derive(Clone)]
 pub struct Triangle {
     a: DVec3,
     b: DVec3,
@@ -35,8 +36,10 @@ impl Triangle {
         );
         Self { a, b, c, mat, aabb }
     }
+}
 
-    pub fn hit(&self, ray: &Ray, ray_t: DInterval) -> Option<HitRecord> {
+impl Hittable for Triangle {
+    fn hit(&self, ray: &Ray, ray_t: DInterval) -> Option<HitRecord> {
         let ab = self.b - self.a;
         let ac = self.c - self.a;
 
@@ -89,7 +92,7 @@ impl Triangle {
         Some(rec)
     }
 
-    pub fn aabb(&self) -> Bounds3 {
+    fn aabb(&self) -> Bounds3 {
         self.aabb
     }
 }

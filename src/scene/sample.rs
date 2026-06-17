@@ -5,8 +5,8 @@ use glam::{DVec3, IVec3};
 use crate::{
     math::{Color, Lerp, Rotate},
     render::{
-        CameraState, CameraTransition, CheckerTexture, Dielectric, DiffuseLight, Film, Hittable,
-        Lambertian, Renderer, SolidColor, Sphere, Triangle, TriangleMesh, VideoCamera,
+        CameraState, CameraTransition, CheckerTexture, Dielectric, DiffuseLight, Film, Lambertian,
+        Renderer, SolidColor, SomeHittable, Sphere, Triangle, TriangleMesh, VideoCamera,
     },
     scene::SceneData,
 };
@@ -41,7 +41,7 @@ fn animate_camera<T: Renderer>(camera: &mut VideoCamera<T>, start: &CameraState)
 }
 
 pub fn sample_scene<T: Renderer>(renderer: T, film: Film) -> SceneData<T> {
-    let mut world: Vec<Hittable> = vec![];
+    let mut world: Vec<SomeHittable> = vec![];
 
     let material_center = Arc::new(Lambertian::from_color(Color::new(0.1, 0.2, 0.5)));
 
@@ -57,24 +57,24 @@ pub fn sample_scene<T: Renderer>(renderer: T, film: Film) -> SceneData<T> {
     ];
     let mesh = TriangleMesh::new(vertices, triangles, material_center);
 
-    world.push(Hittable::TriangleMesh(Box::new(mesh)));
+    world.push(Box::new(mesh));
 
     let light_tex = Arc::new(SolidColor::new(Color::new(1.0, 1.0, 1.0)));
     let material_emit = Arc::new(DiffuseLight::new(light_tex));
     let material_glass = Arc::new(Dielectric::new(1.5));
     let material_bubble = Arc::new(Dielectric::new(1.0 / 1.5));
 
-    world.push(Hittable::Sphere(Sphere::new(
+    world.push(Box::new(Sphere::new(
         DVec3::new(1.0, 0.0, -1.2),
         0.5,
         material_emit,
     )));
-    world.push(Hittable::Sphere(Sphere::new(
+    world.push(Box::new(Sphere::new(
         DVec3::new(-1.0, 0.0, -1.0),
         0.5,
         material_glass,
     )));
-    world.push(Hittable::Sphere(Sphere::new(
+    world.push(Box::new(Sphere::new(
         DVec3::new(-1.0, 0.0, -1.0),
         0.4,
         material_bubble,
@@ -93,8 +93,8 @@ pub fn sample_scene<T: Renderer>(renderer: T, film: Film) -> SceneData<T> {
     let material_checker = Arc::new(Lambertian::new(checker_tex));
     let plane_left = Triangle::new(plane_a, plane_b, plane_c, material_checker.clone());
     let plane_right = Triangle::new(plane_b, plane_c, plane_d, material_checker.clone());
-    world.push(Hittable::Triangle(plane_left));
-    world.push(Hittable::Triangle(plane_right));
+    world.push(Box::new(plane_left));
+    world.push(Box::new(plane_right));
 
     let start = CameraState {
         pos: DVec3::new(0.0, 0.0, 3.0),

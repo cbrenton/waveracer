@@ -6,7 +6,7 @@ use glam::DVec3;
 
 use crate::{
     math::{Bounds3, DInterval, Ray},
-    render::{HitRecord, Material},
+    render::{HitRecord, Hittable, Material},
 };
 
 #[derive(Clone)]
@@ -33,14 +33,14 @@ impl Sphere {
         Self {
             center,
             radius: f64::max(0.0, radius),
-            // TODO: should I make this (and all other geometry) take the mat as a reference to an
-            // Arc and clone here?
             mat,
             aabb,
         }
     }
+}
 
-    pub fn hit(&self, ray: &Ray, ray_t: DInterval) -> Option<HitRecord> {
+impl Hittable for Sphere {
+    fn hit(&self, ray: &Ray, ray_t: DInterval) -> Option<HitRecord> {
         let oc = self.center - ray.origin();
 
         let a = ray.direction().length_squared();
@@ -76,8 +76,7 @@ impl Sphere {
         Some(rec)
     }
 
-    // TODO: cache this
-    pub fn aabb(&self) -> Bounds3 {
+    fn aabb(&self) -> Bounds3 {
         self.aabb
     }
 }

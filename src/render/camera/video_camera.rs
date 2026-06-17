@@ -8,7 +8,7 @@ use crate::{
         Color, Lerp,
         random::{random_double, random_in_unit_disk, random_in_xy_unit_square},
     },
-    render::{CameraState, CameraTransition, Film, FrameData, Hittable, RaySpawner, Renderer},
+    render::{CameraState, CameraTransition, Film, FrameData, RaySpawner, Renderer, SomeHittable},
 };
 
 pub struct VideoCamera<T> {
@@ -57,7 +57,7 @@ impl<T: Renderer> VideoCamera<T> {
         self.transitions.push_back(transition);
     }
 
-    pub fn render_frames(&self, world: &[Hittable]) -> impl Iterator<Item = FrameData> {
+    pub fn render_frames(&self, world: &[SomeHittable]) -> impl Iterator<Item = FrameData> {
         self.transitions
             .clone()
             .into_iter()
@@ -68,7 +68,7 @@ impl<T: Renderer> VideoCamera<T> {
 
     fn render_frame(
         &self,
-        world: &[Hittable],
+        world: &[SomeHittable],
         camera_state: &CameraState,
         frame_number: usize,
     ) -> FrameData {

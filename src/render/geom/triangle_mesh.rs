@@ -7,11 +7,12 @@ use glam::{DVec3, IVec3};
 
 use crate::{
     math::{ALMOST_ZERO, Bounds3, DInterval, Ray},
-    render::{Material, Triangle},
+    render::{Hittable, Material, Triangle},
 };
 
 use super::HitRecord;
 
+#[derive(Clone)]
 pub struct TriangleMesh {
     vertices: Vec<DVec3>,
     triangles: Vec<IVec3>,
@@ -57,8 +58,10 @@ impl TriangleMesh {
             aabb,
         }
     }
+}
 
-    pub fn hit(&self, ray: &Ray, ray_t: DInterval) -> Option<HitRecord> {
+impl Hittable for TriangleMesh {
+    fn hit(&self, ray: &Ray, ray_t: DInterval) -> Option<HitRecord> {
         let mut closest_so_far = ray_t.max;
         let mut result: Option<HitRecord> = None;
 
@@ -71,7 +74,7 @@ impl TriangleMesh {
         result
     }
 
-    pub fn aabb(&self) -> Bounds3 {
+    fn aabb(&self) -> Bounds3 {
         self.aabb
     }
 }

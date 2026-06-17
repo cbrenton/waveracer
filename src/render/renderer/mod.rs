@@ -6,10 +6,10 @@ use mockall::automock;
 
 use crate::{
     math::{Color, Ray},
-    render::Hittable,
+    render::SomeHittable,
 };
 
 #[automock]
 pub trait Renderer {
-    fn ray_color(&self, ray: &Ray, world: &[Hittable], depth: i32) -> Color;
+    fn ray_color(&self, ray: &Ray, world: &[SomeHittable], depth: i32) -> Color;
 }

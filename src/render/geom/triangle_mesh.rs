@@ -62,6 +62,10 @@ impl TriangleMesh {
 
 impl Hittable for TriangleMesh {
     fn hit(&self, ray: &Ray, ray_t: DInterval) -> Option<HitRecord> {
+        if !self.aabb().intersected_by(ray, ray_t) {
+            return None;
+        }
+
         let mut closest_so_far = ray_t.max;
         let mut result: Option<HitRecord> = None;
 

@@ -40,6 +40,10 @@ impl Triangle {
 
 impl Hittable for Triangle {
     fn hit(&self, ray: &Ray, ray_t: DInterval) -> Option<HitRecord> {
+        if !self.aabb().intersected_by(ray, ray_t) {
+            return None;
+        }
+
         let ab = self.b - self.a;
         let ac = self.c - self.a;
 

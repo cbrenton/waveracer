@@ -7,7 +7,7 @@ use glam::{DVec3, IVec3};
 
 use crate::{
     math::{ALMOST_ZERO, Bounds3, DInterval, Ray},
-    render::{Hittable, Material, Triangle},
+    render::{Hittable, Material, SomeHittable, Triangle},
 };
 
 use super::HitRecord;
@@ -16,7 +16,8 @@ use super::HitRecord;
 pub struct TriangleMesh {
     vertices: Vec<DVec3>,
     triangles: Vec<IVec3>,
-    cache: Vec<Triangle>,
+    // TODO: probably refactor this so that it can be accelerated on a per-triangle basis
+    cache: Vec<SomeHittable>,
     aabb: Bounds3,
 }
 
@@ -31,7 +32,7 @@ impl fmt::Debug for TriangleMesh {
 
 impl TriangleMesh {
     pub fn new(vertices: Vec<DVec3>, triangles: Vec<IVec3>, mat: Arc<dyn Material>) -> Self {
-        let mut cache: Vec<Triangle> = vec![];
+        let mut cache: Vec<SomeHittable> = vec![];
         for triangle in &triangles {
             let a = vertices[triangle.x as usize];
             let b = vertices[triangle.y as usize];
@@ -39,7 +40,7 @@ impl TriangleMesh {
             // will this take up unnecessary space? could it be denormalized?
             // TODO: revisit this if I get *really* nitpicky about performance
             let tri = Triangle::new(a, b, c, mat.clone());
-            cache.push(tri);
+            cache.push(Box::new(tri));
         }
         eprintln!("constructing TriangleMesh AABB");
         let aabb = Bounds3::new(
@@ -62,6 +63,10 @@ impl TriangleMesh {
 
 impl Hittable for TriangleMesh {
     fn hit(&self, ray: &Ray, ray_t: DInterval) -> Option<HitRecord> {
+        if !self.aabb().intersected_by(ray, ray_t) {
+            return None;
+        }
+
         let mut closest_so_far = ray_t.max;
         let mut result: Option<HitRecord> = None;
 

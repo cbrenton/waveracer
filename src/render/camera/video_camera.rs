@@ -3,6 +3,7 @@ use std::{collections::LinkedList, mem::take};
 use glam::DVec3;
 use kdam::{BarExt, tqdm};
 
+use crate::render::BVHNode;
 use crate::{
     math::{
         Color, Lerp,
@@ -64,6 +65,15 @@ impl<T: Renderer> VideoCamera<T> {
             .flatten()
             .enumerate()
             .map(move |(frame, s)| self.render_frame(world, &s, frame))
+    }
+
+    pub fn render_accel_frames(&self, world: &BVHNode) -> impl Iterator<Item = FrameData> {
+        self.transitions
+            .clone()
+            .into_iter()
+            .flatten()
+            .enumerate()
+            .map(move |(frame, s)| self.render_frame(&[Box::new(world.clone())], &s, frame))
     }
 
     fn render_frame(

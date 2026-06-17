@@ -1,3 +1,4 @@
+mod accel;
 mod camera;
 mod frame_data;
 mod geom;
@@ -5,6 +6,7 @@ mod image;
 mod materials;
 mod renderer;
 
+pub use accel::*;
 pub use camera::*;
 pub use frame_data::FrameData;
 pub use geom::*;

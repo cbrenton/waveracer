@@ -7,7 +7,7 @@ mod triangle_mesh;
 
 pub use empty::Empty;
 pub use hit_record::HitRecord;
-pub use hittable::{Hittable, SomeHittable};
+pub use hittable::{Hittable, MockHittable, SomeHittable};
 pub use sphere::Sphere;
 pub use triangle::Triangle;
 pub use triangle_mesh::TriangleMesh;

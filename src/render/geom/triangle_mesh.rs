@@ -42,7 +42,6 @@ impl TriangleMesh {
             let tri = Triangle::new(a, b, c, mat.clone());
             cache.push(Box::new(tri));
         }
-        eprintln!("constructing TriangleMesh AABB");
         let aabb = Bounds3::new(
             cache
                 .iter()

@@ -29,7 +29,6 @@ impl fmt::Debug for Triangle {
 impl Triangle {
     pub fn new(a: DVec3, b: DVec3, c: DVec3, mat: Arc<dyn Material>) -> Self {
         let pts = [a, b, c];
-        eprintln!("constructing Triangle AABB");
         let aabb = Bounds3::new(
             pts.iter().fold(DVec3::MAX, |cur_min, &pt| cur_min.min(pt)),
             pts.iter().fold(DVec3::MIN, |cur_max, &pt| cur_max.max(pt)),

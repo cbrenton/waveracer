@@ -1,5 +1,7 @@
 run filename:
-  just clean && cargo run --release && just convert {{filename}}
+  just clean || true
+  cargo run --release
+  just convert {{filename}}
 
 convert filename='output':
   ffmpeg -framerate 24 -pattern_type glob -i './output/frame_*.png' -c:v libx264 -pix_fmt yuv420p {{filename}}.mp4

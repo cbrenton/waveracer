@@ -80,7 +80,11 @@ impl Bounds3 {
 
         let t_min_valid = ray_t.contains(t_min);
         let t_max_valid = ray_t.contains(t_max);
-        t_max >= t_min && (t_min_valid || t_max_valid)
+        // Special case: if ray_t is entirely inside of t_min and t_max, the ray still intersects
+        // the AABB. If a ray is fired off inside of a box, it still intersects that box even if it
+        // doesn't reach either edge.
+        let ray_t_inside_bounds = ray_t.min >= t_min && ray_t.max <= t_max;
+        t_max >= t_min && (t_min_valid || t_max_valid || ray_t_inside_bounds)
     }
 
     /// Get the position of a point pt relative to a bounding box, where a point at exactly
@@ -289,6 +293,20 @@ mod tests {
 
         let bounds_min = DVec3::new(-1.0, -1.0, -1.0);
         let bounds_max = DVec3::ONE;
+        let bounds = Bounds3::new(bounds_min, bounds_max);
+
+        assert!(bounds.intersected_by(&ray, ray_t));
+    }
+
+    #[test]
+    fn test_intersected_by_ray_with_ray_t_completely_inside_bounds_returns_true() {
+        let ray_origin = DVec3::ZERO;
+        let ray_dir = DVec3::new(0.0, 0.0, 1.0);
+        let ray_t = DInterval::new(1.1, 1.5);
+        let ray = Ray::new(ray_origin, ray_dir);
+
+        let bounds_min = DVec3::new(-1.0, -1.0, 1.0);
+        let bounds_max = DVec3::new(1.0, 1.0, 2.0);
         let bounds = Bounds3::new(bounds_min, bounds_max);
 
         assert!(bounds.intersected_by(&ray, ray_t));
